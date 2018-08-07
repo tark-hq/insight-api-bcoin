@@ -1,0 +1,5 @@
+{
+  "memory": false,
+  "network": "testnet",
+  "prefix": "/opt/bcoin/"
+}
