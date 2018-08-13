@@ -30,6 +30,21 @@ class AddressService {
     }
 
 
+    /**
+     * Retrieves all meta about transactions as long as with transactions objects pertaining to given address
+     *
+     * @param address {string}
+     *
+     * @return {MTX[]}
+     */
+    async getMetasByAddress(address) {
+        let mtxs = await this.node.getMetaByAddress(address);
+
+        return mtxs;
+    }
+
+
+    //todo refactor, move out to transactionService
     async _populateInputValues(txs) {
         return await Promise.all(txs.map(async tx => {
             //get inputs

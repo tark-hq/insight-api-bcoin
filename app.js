@@ -8,7 +8,7 @@ const Router = require('koa-router');
 //controllers
 const AddressController = require('./app/controllers/AddressController');
 const BlockController = require('./app/controllers/BlockController');
-
+const TransactionController = require('./app/controllers/TransactionController');
 
 console.log(`Starting insight-api-bcoin v${version}`);
 
@@ -55,6 +55,7 @@ async function initComponents() {
 
         const addressController = new AddressController(node);
         const blockController = new BlockController(node);
+        const transactionController = new TransactionController(node);
 
         // logger
         app.use(async (ctx, next) => {
@@ -77,10 +78,16 @@ async function initComponents() {
         const router = new Router();
 
         router
+            //Blocks
             .get('/block-index/:height', blockController.getBlockHash)
             .get('/block/:blockHash', blockController.getBlock)
             .get('/rawBlock/:blockHashOrHeight', blockController.getRawBlock)
-            .get('/blocks', blockController.blocksSummaries);
+            .get('/addr/:address', addressController.getAddressInfo)
+
+            //Transactions
+            .get('/tx/:txid', transactionController.getTransaction);
+
+
 
         app
             .use(router.routes())

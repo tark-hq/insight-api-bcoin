@@ -28,6 +28,7 @@
   "main": "lib",
   "bitcoreNode": "lib",
   "dependencies": {
+    "assert": "^1.4.1",
     "bcoin": "git://github.com/bcoin-org/bcoin.git",
     "koa": "^2.5.2",
     "koa-router": "^7.4.0"

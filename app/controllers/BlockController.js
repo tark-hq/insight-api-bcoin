@@ -138,10 +138,6 @@ class BlockController {
         }
     }
 
-
-    async blocksSummaries(ctx, next) {
-
-    }
 }
 
 module.exports = BlockController;
