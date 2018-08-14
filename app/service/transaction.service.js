@@ -46,9 +46,28 @@ class TransactionService {
         return tx;
     }
 
+    /**
+     *
+     * @param hash {string} transaction hash, big-endian order
+     * @returns {Promise<string>}
+     */
+    async getRawTransaction(hash) {
+        let tx = await this.node.getTX(hash);
+
+        if (tx) {
+            return tx.toRaw().toString('hex');
+        } else {
+            return null
+        }
+    }
+
 
     /**
-     * Returns map<address -> {}>
+     * Returns map<address -> {
+     *           "spentTxId": spentTxId || null,
+     *           "spentIndex": spentIndex || null,
+     *           "spentHeight": spentHeight || null
+     *       }>
      * @param tx {TX}
      * @returns {Promise<void>}
      */

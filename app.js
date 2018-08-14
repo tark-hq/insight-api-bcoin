@@ -85,7 +85,8 @@ async function initComponents() {
             .get('/addr/:address', addressController.getAddressInfo)
 
             //Transactions
-            .get('/tx/:txid', transactionController.getTransaction);
+            .get('/tx/:txid', transactionController.getTransaction)
+            .get('/rawtx/:txid', transactionController.getRawTransaction);
 
 
 
