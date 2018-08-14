@@ -157,6 +157,110 @@ class MappingService {
 
     }
 
+
+    /**
+     *
+     * @param addrStr
+     * @param mtxs
+     * @param txs {TX[]}
+     * @param bestHeight
+     */
+    static mapGetAddress(addrStr, mtxs, txs, bestHeight) {
+
+        function inputFilter(input) {
+            return input && input.getAddress() && input.getAddress().toString(config.network) === addrStr;
+        }
+
+        function outputFilter(output) {
+            return output && output.getAddress() && output.getAddress().toString(config.network) === addrStr;
+        }
+
+        function valueReducer(accum, entity) {
+            return accum + entity.value;
+        }
+
+        function totalReceivedReducer(accum, tx) {
+            return accum + tx.outputs.filter(outputFilter).reduce(valueReducer, 0);
+        }
+
+        function totalSentReducer(accum, tx) {
+            return accum + tx.inputs.filter(inputFilter).reduce(valueReducer, 0);
+        }
+
+        const totalSentSat = txs.reduce(totalSentReducer, 0);
+        const totalReceivedSat = txs.reduce(totalReceivedReducer, 0);
+
+        const balanceSat = totalReceivedSat - totalSentSat;
+        const balance = Utils.satoshiToBTC(balanceSat);
+
+        const totalReceived = Utils.satoshiToBTC(totalReceivedSat);
+        const totalSent = Utils.satoshiToBTC(totalSentSat);
+
+
+        const unconfirmedTxs = mtxs.filter(mtx => mtx.height === bestHeight);
+
+        const totalUnconfirmedSentSat = unconfirmedTxs.reduce(totalSentReducer, 0);
+        const totalUnconfirmedReceivedSat = unconfirmedTxs.reduce(totalReceivedReducer, 0);
+
+
+        const unconfirmedBalanceSat = totalUnconfirmedReceivedSat - totalUnconfirmedSentSat;
+        const unconfirmedBalance = Utils.satoshiToBTC(unconfirmedBalanceSat);
+
+
+        //todo test
+        const unconfirmedTxApperances = unconfirmedTxs.length;
+
+        const txApperances = txs.length;
+        const transactions = txs.map(tx => tx.txid());
+
+
+        /* const exmpl = {
+             "addrStr": "mgYrJQYubixiBDUYT7xBRoJcsEEsnS9Ncb",
+             "balance": 0.0028,
+             "balanceSat": 280000,
+             "totalReceived": 0.0028,
+             "totalReceivedSat": 280000,
+             "totalSent": 0,
+             "totalSentSat": 0,
+             "unconfirmedBalance": 0,
+             "unconfirmedBalanceSat": 0,
+             "unconfirmedTxApperances": 0,
+             "txApperances": 1,
+             "transactions": ["f3ea8a564822fbeb0ceb952864f06331b4659eaae743aef9a19b79d1505536ac"]
+         };
+
+        const t = {
+            "addrStr": "mgYrJQYubixiBDUYT7xBRoJcsEEsnS9Ncb",
+            "balance": 0.0028,
+            "balanceSat": 280000,
+            "totalReceived": 0.0028,
+            "totalReceivedSat": 280000,
+            "totalSent": 0,
+            "totalSentSat": 0,
+            "unconfirmedBalance": 0,
+            "unconfirmedBalanceSat": 0,
+            "unconfirmedTxApperances": 0,
+            "txApperances": 1,
+            "transactions": ["f3ea8a564822fbeb0ceb952864f06331b4659eaae743aef9a19b79d1505536ac"]
+        }
+         */
+
+        return {
+            addrStr: addrStr,
+            "balance": balance,
+            "balanceSat": balanceSat,
+            "totalReceived": totalReceived,
+            "totalReceivedSat": totalReceivedSat,
+            "totalSent": totalSent,
+            "totalSentSat": totalSentSat,
+            "unconfirmedBalance": unconfirmedBalance,
+            "unconfirmedBalanceSat": unconfirmedBalanceSat,
+            "unconfirmedTxApperances": unconfirmedTxApperances,
+            "txApperances": txApperances,
+            "transactions": transactions
+        }
+    }
+
 }
 
 module.exports = MappingService;

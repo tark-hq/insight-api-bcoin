@@ -82,12 +82,13 @@ async function initComponents() {
             .get('/block-index/:height', blockController.getBlockHash)
             .get('/block/:blockHash', blockController.getBlock)
             .get('/rawBlock/:blockHashOrHeight', blockController.getRawBlock)
-            .get('/addr/:address', addressController.getAddressInfo)
 
             //Transactions
             .get('/tx/:txid', transactionController.getTransaction)
-            .get('/rawtx/:txid', transactionController.getRawTransaction);
+            .get('/rawtx/:txid', transactionController.getRawTransaction)
 
+            //Address
+            .get('/addr/:address', addressController.getAddressInfo)
 
 
         app
