@@ -31,12 +31,15 @@ class AddressController {
         let addr = ctx.params.address;
         if (addr) {
             const isValid = ValidationUtils.validateAddress(addr);
+
+            const isNoTxList = ctx.query.noTxList && parseInt(ctx.query.noTxList);
+
             if (isValid) {
                 try {
                     const txs = await this.addressService.getTransactionsByAddress(addr, true);
                     const mtxs = await this.addressService.getMetasByAddress(addr);
                     if (txs && txs.length > 0) {
-                        const result = MappingService.mapGetAddress(addr, mtxs, txs, this.node.chain.height);
+                        const result = MappingService.mapGetAddress(addr, mtxs, txs, this.node.chain.height, isNoTxList);
                         ctx.body = result;
                         ctx.status = 200;
                     } else {

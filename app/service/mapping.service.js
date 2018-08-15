@@ -165,7 +165,7 @@ class MappingService {
      * @param txs {TX[]}
      * @param bestHeight
      */
-    static mapGetAddress(addrStr, mtxs, txs, bestHeight) {
+    static mapGetAddress(addrStr, mtxs, txs, bestHeight, noTxList) {
 
         function inputFilter(input) {
             return input && input.getAddress() && input.getAddress().toString(config.network) === addrStr;
@@ -213,52 +213,25 @@ class MappingService {
         const txApperances = txs.length;
         const transactions = txs.map(tx => tx.txid());
 
-
-        /* const exmpl = {
-             "addrStr": "mgYrJQYubixiBDUYT7xBRoJcsEEsnS9Ncb",
-             "balance": 0.0028,
-             "balanceSat": 280000,
-             "totalReceived": 0.0028,
-             "totalReceivedSat": 280000,
-             "totalSent": 0,
-             "totalSentSat": 0,
-             "unconfirmedBalance": 0,
-             "unconfirmedBalanceSat": 0,
-             "unconfirmedTxApperances": 0,
-             "txApperances": 1,
-             "transactions": ["f3ea8a564822fbeb0ceb952864f06331b4659eaae743aef9a19b79d1505536ac"]
-         };
-
-        const t = {
-            "addrStr": "mgYrJQYubixiBDUYT7xBRoJcsEEsnS9Ncb",
-            "balance": 0.0028,
-            "balanceSat": 280000,
-            "totalReceived": 0.0028,
-            "totalReceivedSat": 280000,
-            "totalSent": 0,
-            "totalSentSat": 0,
-            "unconfirmedBalance": 0,
-            "unconfirmedBalanceSat": 0,
-            "unconfirmedTxApperances": 0,
-            "txApperances": 1,
-            "transactions": ["f3ea8a564822fbeb0ceb952864f06331b4659eaae743aef9a19b79d1505536ac"]
-        }
-         */
-
-        return {
+        let result = {
             addrStr: addrStr,
-            "balance": balance,
-            "balanceSat": balanceSat,
-            "totalReceived": totalReceived,
-            "totalReceivedSat": totalReceivedSat,
-            "totalSent": totalSent,
-            "totalSentSat": totalSentSat,
-            "unconfirmedBalance": unconfirmedBalance,
-            "unconfirmedBalanceSat": unconfirmedBalanceSat,
-            "unconfirmedTxApperances": unconfirmedTxApperances,
-            "txApperances": txApperances,
-            "transactions": transactions
+            balance: balance,
+            balanceSat: balanceSat,
+            totalReceived: totalReceived,
+            totalReceivedSat: totalReceivedSat,
+            totalSent: totalSent,
+            totalSentSat: totalSentSat,
+            unconfirmedBalance: unconfirmedBalance,
+            unconfirmedBalanceSat: unconfirmedBalanceSat,
+            unconfirmedTxApperances: unconfirmedTxApperances,
+            txApperances: txApperances,
+        };
+
+        if (!noTxList) {
+            result.transactions = transactions;
         }
+
+        return result;
     }
 
 }
