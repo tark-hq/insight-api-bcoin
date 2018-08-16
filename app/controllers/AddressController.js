@@ -26,6 +26,7 @@ class AddressController {
         this.getAddressTotalSent = this.getAddressTotalSent.bind(this);
         this.getAddressUnconfirmedBalance = this.getAddressUnconfirmedBalance.bind(this);
         this.getAddressUnspentOutputs = this.getAddressUnspentOutputs.bind(this);
+        this.getAddressesUnspentOutputs = this.getAddressesUnspentOutputs.bind(this);
     }
 
 
@@ -103,7 +104,26 @@ class AddressController {
             ctx.body = new ErrorMessage('Address is not valid');
             ctx.status = 400;
         }
+    }
 
+    async getAddressesUnspentOutputs(ctx, next) {
+        let addrs = ctx.params.addresses;
+        if (addrs.indexOf(',') !== -1) {
+            const addresses = addrs.split(',');
+            const isValid = addresses.every(address => ValidationUtils.validateAddress(address))
+            if (isValid) {
+                let coins = await this.addressService.getCoinsByAddress(addresses);
+                const result = MappingService.mapGetUTXOsByAddress(coins, this.node.chain.height);
+                ctx.body = result;
+                ctx.status = 200;
+            } else {
+                ctx.body = new ErrorMessage('Addresses is not valid');
+                ctx.status = 400;
+            }
+        } else {
+            ctx.params.address = addrs;
+            await this.getAddressesUnspentOutputs(ctx, next);
+        }
     }
 }
 
