@@ -8,9 +8,12 @@ class AddressService {
         this.node = node;
 
         this.getTransactionsByAddress = this.getTransactionsByAddress.bind(this);
+        this.getMetasByAddress = this.getMetasByAddress.bind(this);
+        this.getCoinsByAddress = this.getCoinsByAddress.bind(this);
     }
 
 
+    //todo wtf is here, should be in transactionService instead?
     /**
      * Retrieves all transactions pertaining to given address
      *
@@ -43,6 +46,20 @@ class AddressService {
         return mtxs;
     }
 
+
+    /**
+     *
+     * Gets unspent outputs for the given address
+     * Coin is the UTXO
+     *
+     * @returns {Promise<Coin[]>}
+     */
+    async getCoinsByAddress(address) {
+        //utxos
+        const coins = await this.node.getCoinsByAddress(address);
+
+        return coins;
+    }
 
     //todo refactor, move out to transactionService
     async _populateInputValues(txs) {

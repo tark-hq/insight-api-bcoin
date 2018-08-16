@@ -79,6 +79,8 @@ class MappingService {
     /**
      *
      * @param tx {TX} bcoin tx
+     * @param meta
+     * @param outputAddressesMetaMap
      */
     static mapGetTx(tx, meta, outputAddressesMetaMap) {
 
@@ -164,8 +166,21 @@ class MappingService {
      * @param mtxs
      * @param txs {TX[]}
      * @param bestHeight
+     * @param options
      */
-    static mapGetAddress(addrStr, mtxs, txs, bestHeight, noTxList) {
+    static mapGetAddress(addrStr, mtxs, txs, bestHeight, options) {
+
+        if (options.from) {
+            mtxs = mtxs.filter(mtx => mtx.height >= options.from);
+        }
+
+        if (options.to) {
+            mtxs = mtxs.filter(mtx => mtx.height <= options.to);
+        }
+
+        const mtxsId = mtxs.map(mtx => mtx.tx.txid());
+
+        txs = txs.filter(tx => mtxsId.indexOf(tx.txid()) !== -1);
 
         function inputFilter(input) {
             return input && input.getAddress() && input.getAddress().toString(config.network) === addrStr;
@@ -227,13 +242,28 @@ class MappingService {
             txApperances: txApperances,
         };
 
-        if (!noTxList) {
+        if (!options.noTxList) {
             result.transactions = transactions;
         }
 
         return result;
     }
 
+    static mapGetUTXOsByAddress(coins, bestHeight) {
+        return coins.map(coin => {
+            return {
+                address: coin.getAddress().toString(config.network),
+                txid: Utils.reverseHex(coin.hash),
+                vout: coin.index,
+                scriptPubKey: coin.script.toRaw().toString('hex'),
+                amount: Utils.satoshiToBTC(coin.value),
+                satoshis: coin.value,
+                height: coin.height,
+                confirmations: bestHeight - coin.height + 1
+            }
+        });
+    }
 }
+
 
 module.exports = MappingService;

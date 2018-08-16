@@ -89,6 +89,11 @@ async function initComponents() {
 
             //Address
             .get('/addr/:address', addressController.getAddressInfo)
+            .get('/addr/:address/balance', addressController.getAddressBalance)
+            .get('/addr/:address/totalReceived', addressController.getAddressBalance)
+            .get('/addr/:address/totalSent', addressController.getAddressBalance)
+            .get('/addr/:address/unconfirmedBalance', addressController.getAddressBalance)
+            .get('/addr/:address/utxo', addressController.getAddressUnspentOutputs);
 
 
         app
