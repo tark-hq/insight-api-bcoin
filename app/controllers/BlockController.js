@@ -5,6 +5,7 @@ const BlockService = require('../service/block.service');
 const MappingService = require('../service/mapping.service');
 
 const ValidationUtils = require('../util/validation.utils');
+const Utils = require('../util/utils');
 
 class BlockController {
 
@@ -58,7 +59,7 @@ class BlockController {
 
     async getBlock(ctx, next) {
         if (ctx.params.blockHash) {
-            const blockHash = ctx.params.blockHash;
+            const blockHash = Utils.reverseHex(ctx.params.blockHash);
             const isValid = ValidationUtils.validateBlockHash(blockHash);
 
             if (isValid) {
@@ -66,13 +67,14 @@ class BlockController {
                     const block = await this.blockService.getBlock(blockHash);
                     const entry = await this.blockService.getEntry(blockHash);
                     const nextHash = await this.blockService.getNextHash(blockHash);
-                    const bestBlockHeight = await this.blockService.getBestBlockHeight();
-                    const isMainChain = await this.blockService.isMainChain(entry);
 
-                    if (!block) {
+                    if (!block || !entry) {
                         ctx.status = 404;
                         ctx.body = new ErrorMessage('Block not found')
                     } else {
+                        const bestBlockHeight = await this.blockService.getBestBlockHeight();
+                        const isMainChain = await this.blockService.isMainChain(entry);
+
                         ctx.status = 200;
                         ctx.body = MappingService.mapGetBlock(block, entry, nextHash, bestBlockHeight, isMainChain);
                     }
