@@ -110,11 +110,12 @@ class AddressController {
     }
 
     async getAddressesUnspentOutputs(ctx, next) {
-        let addrs = ctx.params.addresses;
-        if (addrs.indexOf(',') !== -1) {
-            const addresses = addrs.split(',');
-            const isValid = addresses.every(address => ValidationUtils.validateAddress(address))
+        let addressesStr = ctx.params.addresses;
+        if (addressesStr.indexOf(',') !== -1) {
+            const addrs = addressesStr.split(',');
+            const isValid = addrs.every(address => ValidationUtils.validateAddress(address));
             if (isValid) {
+                const addresses = addrs.map(addr => Utils.addrStrToAddress(addr));
                 let coins = await this.addressService.getCoinsByAddress(addresses);
                 const result = MappingService.mapGetUTXOsByAddress(coins, this.node.chain.height);
                 ctx.body = result;
