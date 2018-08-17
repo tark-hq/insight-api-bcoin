@@ -253,7 +253,7 @@ class MappingService {
         return coins.map(coin => {
             return {
                 address: coin.getAddress().toString(config.network),
-                txid: Utils.reverseHex(coin.hash),
+                txid: Utils.reverseHex(coin.hash.toString('hex')),
                 vout: coin.index,
                 scriptPubKey: coin.script.toRaw().toString('hex'),
                 amount: Utils.satoshiToBTC(coin.value),

@@ -4,6 +4,8 @@ const MappingService = require('../service/mapping.service');
 const ValidationUtils = require('../util/validation.utils');
 const ErrorMessage = require('../model/ErrorMessage');
 
+const Utils = require('../util/utils');
+
 class AddressController {
 
     /**
@@ -94,7 +96,8 @@ class AddressController {
 
         const isValid = ValidationUtils.validateAddress(addr);
         if (isValid) {
-            let coins = await this.addressService.getCoinsByAddress(addr);
+            const address = Utils.addrStrToAddress(addr);
+            const coins = await this.addressService.getCoinsByAddress(address);
 
             const result = MappingService.mapGetUTXOsByAddress(coins, this.node.chain.height);
             ctx.body = result;

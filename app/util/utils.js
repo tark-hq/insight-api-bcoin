@@ -1,4 +1,5 @@
 const assert = require('assert');
+const Address = require('bcoin').Address;
 
 class Utils {
     /**
@@ -22,6 +23,29 @@ class Utils {
         }
 
         return diff;
+    }
+
+
+    /**
+     * Converts address {string} into bcoin {Address}
+     *
+     * Address string should be a valid address validated by validationUtils
+     *
+     * @param addrStr {string}
+     *
+     * @return {Address}
+     */
+    static addrStrToAddress(addrStr) {
+        try {
+            return Address.fromBase58(addrStr)
+        } catch (e) {
+            try {
+                return Address.fromBech32(addrStr)
+            } catch (e) {
+                throw new Error(e);
+            }
+        }
+
     }
 
     /**
