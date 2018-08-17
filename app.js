@@ -1,5 +1,6 @@
 const Koa = require('koa');
 const app = new Koa();
+const bodyParser = require('koa-bodyparser');
 const bcoin = require('bcoin');
 const config = require('./config.json');
 const version = require('./package').version;
@@ -57,8 +58,12 @@ async function initComponents() {
         const blockController = new BlockController(node);
         const transactionController = new TransactionController(node);
 
+        //Body parser
+        app.use(bodyParser());
+
         // logger
         app.use(async (ctx, next) => {
+            ctx.body = ctx.request.body;
             await next();
             const rt = ctx.response.get('X-Response-Time');
             console.log(`${ctx.method} ${ctx.url} - ${rt}`);
@@ -94,7 +99,8 @@ async function initComponents() {
             .get('/addr/:address/totalSent', addressController.getAddressBalance)
             .get('/addr/:address/unconfirmedBalance', addressController.getAddressBalance)
             .get('/addr/:address/utxo', addressController.getAddressUnspentOutputs)
-            .get('/addrs/:addresses/utxo', addressController.getAddressesUnspentOutputs);
+            .get('/addrs/:addresses/utxo', addressController.getAddressesUnspentOutputs)
+            .post('/addrs/utxo', addressController.getAddressesUnspentOutputs);
 
 
         app

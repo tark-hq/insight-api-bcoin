@@ -111,6 +111,17 @@ class AddressController {
 
     async getAddressesUnspentOutputs(ctx, next) {
         let addressesStr = ctx.params.addresses;
+
+        if(ctx.req.method === 'POST') {
+            addressesStr = ctx.body.addrs;
+        }
+
+        if (!addressesStr) {
+            ctx.body = new ErrorMessage('No addresses was specified');
+            ctx.status = 400;
+            return next();
+        }
+
         if (addressesStr.indexOf(',') !== -1) {
             const addrs = addressesStr.split(',');
             const isValid = addrs.every(address => ValidationUtils.validateAddress(address));
@@ -125,8 +136,8 @@ class AddressController {
                 ctx.status = 400;
             }
         } else {
-            ctx.params.address = addrs;
-            await this.getAddressesUnspentOutputs(ctx, next);
+            ctx.params.address = addressesStr;
+            await this.getAddressUnspentOutputs(ctx, next);
         }
     }
 }
