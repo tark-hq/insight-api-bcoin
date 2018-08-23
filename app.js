@@ -31,6 +31,8 @@ async function initComponents() {
         config.memory = false;
         config['index-tx'] = true;
         config['index-address'] = true;
+        config['index-outpoint'] = true;
+
         const node = new bcoin.FullNode(config);
 
         console.log('Starting Bcoin node');
@@ -79,7 +81,6 @@ async function initComponents() {
         });
 
         // response
-
         const router = new Router();
 
         router
@@ -91,6 +92,7 @@ async function initComponents() {
             //Transactions
             .get('/tx/:txid', transactionController.getTransaction)
             .get('/rawtx/:txid', transactionController.getRawTransaction)
+            .get('/txs/', transactionController.getTransactionsByBlockHashOrAddress)
 
             //Address
             .get('/addr/:address', addressController.getAddressInfo)
@@ -102,8 +104,8 @@ async function initComponents() {
             .get('/addrs/:addresses/utxo', addressController.getAddressesUnspentOutputs)
             .post('/addrs/utxo', addressController.getAddressesUnspentOutputs);
 
-
         app
+
             .use(router.routes())
             .use(router.allowedMethods());
     }

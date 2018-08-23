@@ -1,3 +1,5 @@
+const Outpoint = require('bcoin').Outpoint;
+const TX = require('bcoin').TX;
 const Utils = require('../util/utils');
 const config = require('../../config');
 const ErrorMessage = require('../model/ErrorMessage');
@@ -19,133 +21,107 @@ class TransactionService {
         this.addressService = new AddressService(node);
 
         this.getTransaction = this.getTransaction.bind(this);
-        this.getSpentTxsMap = this.getSpentTxsMap.bind(this);
+        this.getRawTransaction = this.getRawTransaction.bind(this);
+        this.getMetaTransaction = this.getMetaTransaction.bind(this);
+        this.getSpentOutputs = this.getSpentOutputs.bind(this);
     }
 
 
-    async getMeta(hash) {
-        let mtx = await this.node.getMeta(hash);
-        mtx.confirmations = this.node.chain.height + 1 - mtx.height;
+    /**
+     * Returns {MTX} meta transaction object with some meta fields and transaction object. See {@link {MTX}}
+     *
+     * @param hash {string} transaction hash, big-endian order
+     * @return {Promise<*>}
+     */
+    async getMetaTransaction(hash) {
+        const hashBuffer = Utils.strToBuffer(hash);
+        let meta = await this.node.getMeta(hashBuffer);
+        const view = await this.node.getMetaView(meta);
 
-        return mtx;
+        if (meta) {
+            meta.tx.inputs = meta.tx.inputs.map(this._inputValuesMapper.bind(null, view));
+            meta.confirmations = this.node.chain.height + 1 - meta.height;
+        }
+
+        return meta;
     }
 
     /**
+     * Returns transaction {TX}
      *
      * @param hash {string} transaction hash, big-endian order
-     * @param includeInputValues {boolean} whether to include input values
      * @return {Promise<TX>} bcoin TX primitive
      */
-    async getTransaction(hash, includeInputValues) {
-        let tx = await this.node.getTX(hash);
+    async getTransaction(hash) {
+        const hashBuffer = Utils.strToBuffer(hash);
 
-        if (tx && includeInputValues) {
-            tx = await this._populateInputValues(tx);
+        const meta = await this.node.getMeta(hashBuffer);
+
+        if (!meta) {
+            return null;
         }
+
+        const view = await this.node.getMetaView(meta);
+
+        let tx = meta.tx;
+        tx.inputs = tx.inputs.map(this._inputValuesMapper.bind(null, view));
 
         return tx;
     }
 
     /**
+     * Returns raw transaction in hex format
      *
      * @param hash {string} transaction hash, big-endian order
      * @returns {Promise<string>}
      */
     async getRawTransaction(hash) {
-        let tx = await this.node.getTX(hash);
+        const hashBuffer = Utils.strToBuffer(hash);
 
-        if (tx) {
-            return tx.toRaw().toString('hex');
-        } else {
-            return null
-        }
+        let tx = await this.node.getTX(hashBuffer);
+
+        return tx && tx.toRaw().toString('hex');
     }
 
 
     /**
-     * Returns map<address -> {
-     *           "spentTxId": spentTxId || null,
-     *           "spentIndex": spentIndex || null,
-     *           "spentHeight": spentHeight || null
-     *       }>
-     * @param tx {TX}
-     * @returns {Promise<void>}
+     * Returns {Array} of {MTX} of spent outputs. Returns false or MTX. Index always match index of outputs of tx.
+     * @param tx {TX} transaction object
+     * @return {Promise<MTX[]>}
      */
-    async getSpentTxsMap(tx) {
-        const outputAddresses = tx.outputs.map((output, index) => {
-            return {
-                address: output.script.getAddress().toString(config.network),
-                txid: tx.txid(),
-                n: index
-            }
-        });
-
-        return await (outputAddresses.reduce(async (map, outputAddressObj) => {
-            let outputAddress = outputAddressObj.address;
-            let outputIndex = outputAddressObj.n;
-            let outputTxId = outputAddressObj.txid;
-            let outputHash = Utils.reverseHex(outputTxId);
-
-            let _map = await map;
-            let spentTxId = null;
-            let spentIndex = null;
-            let spentHeight = null;
-
-            let metas = await this.addressService.getMetasByAddress(outputAddress);
-            console.log('scanning output with address', outputAddress);
-            //filtering out only those metas which have our txid in the inputs (aka spent transactions)
-            metas.forEach((mtx) => {
-                let _tx = mtx.tx;
-                _tx.inputs.forEach((input, index) => {
-                    if (input.prevout.hash === outputHash && input.prevout.index === outputIndex) {
-                        console.log(`txid ${tx.txid()} spent at ${_tx.txid()} index #${index}`);
-                        spentTxId = _tx.txid();
-                        spentIndex = index;
-                        spentHeight = mtx.height;
-                    }
-                })
+    async getSpentOutputs(tx) {
+        return await Promise.all(tx.outputs.map(async (output, index) => {
+            const outpoint = Outpoint.fromOptions({
+                hash: Utils.strToBuffer(tx.hash()),
+                index: index
             });
 
-
-            _map[outputAddress] = {
-                "spentTxId": spentTxId,
-                "spentIndex": spentIndex,
-                "spentHeight": spentHeight
-            };
-
-            return _map;
-        }, {}));
+            const spentTxHashBuffer = await this.node.outpointindex.getTX(outpoint);
+            return !!spentTxHashBuffer && await this.node.getMeta(spentTxHashBuffer);
+        }));
     }
 
 
-    async _populateInputValues(tx) {
-        let inputs = tx.inputs;
+    /**
+     * Private method, maps coin value to the input
+     * @param view {CoinView}
+     * @param input {Input}
+     * @return {Input}
+     * @private
+     */
+    _inputValuesMapper(view, input) {
+        //ensure existence
+        input.value = null;
 
-        tx.inputs = await Promise.all(inputs.map(async input => {
+        if (!input.isCoinbase()) {
+            const coin = view.getCoin(input.prevout);
 
-            if (input.isCoinbase()) {
-                input.value = null;
-                return input
+            if (coin) {
+                input.value = coin.value
             }
+        }
 
-            //get prevOut
-            let prevoutHash = input.prevout.hash;
-            let prevoutIndex = input.prevout.index;
-
-            //search tx by hash
-            let prevTx = await this.node.getTX(prevoutHash);
-
-            if (!prevTx) {
-                Promise.reject(new ErrorMessage(`Invalid to find prevTx with hash ${prevoutHash} of tx ${tx.txid()}`))
-            }
-
-            let value = prevTx.outputs[prevoutIndex].value;
-            input.value = value;
-
-            return input;
-        }));
-
-        return tx;
+        return input;
     }
 }
 

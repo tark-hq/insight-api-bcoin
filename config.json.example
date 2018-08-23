@@ -1,5 +1,8 @@
 {
   "memory": false,
   "network": "testnet",
-  "prefix": "/opt/bcoin/"
+  "prefix": "/opt/bcoin/",
+  "logConsole": false,
+  "logFile": false,
+  "logLevel": "debug"
 }

@@ -23,9 +23,13 @@ class TransactionController {
 
         this.transactionService = new TransactionService(node);
         this.addressService = new AddressService(node);
+        this.blockService = new BlockService(node);
 
         this.getTransaction = this.getTransaction.bind(this);
         this.getRawTransaction = this.getRawTransaction.bind(this);
+        this.getTransactionsByBlockHashOrAddress = this.getTransactionsByBlockHashOrAddress.bind(this);
+        this.getTransactionsByBlockHash = this.getTransactionsByBlockHash.bind(this);
+        this.getTransactionsByAddress = this.getTransactionsByAddress.bind(this);
     }
 
     async getTransaction(ctx, next) {
@@ -35,14 +39,13 @@ class TransactionController {
             if (isValid) {
                 try {
                     //reverse byte-order, software\explorers shows big-endian hashes
-                    const txIdLittleEndian = Utils.reverseHex(txid);
-                    const tx = await this.transactionService.getTransaction(txIdLittleEndian, true);
-                    const meta = await this.transactionService.getMeta(txIdLittleEndian);
-                    const outputAddressesMetaMap = await this.transactionService.getSpentTxsMap(tx);
+                    const txHash = Utils.reverseHex(txid);
+                    const mtx = await this.transactionService.getMetaTransaction(txHash);
+                    const spentOutputs = await this.transactionService.getSpentOutputs(mtx.tx);
 
-                    if (tx) {
+                    if (mtx) {
                         ctx.status = 200;
-                        ctx.body = MappingService.mapGetTx(tx, meta, outputAddressesMetaMap);
+                        ctx.body = MappingService.mapGetTx(mtx, spentOutputs)
                     } else {
                         ctx.status = 404;
                         ctx.body = new ErrorMessage('Not found');
@@ -86,7 +89,7 @@ class TransactionController {
                     ctx.body = new ErrorMessage('Could not get rawTx, internal server error');
                 }
             } else {
-                ctx.status = 404;
+                ctx.status = 400;
                 ctx.body = new ErrorMessage('Txid is not valid')
             }
         } else {
@@ -94,6 +97,55 @@ class TransactionController {
             ctx.body = new ErrorMessage('Txid is not specified')
         }
     }
+
+
+    async getTransactionsByBlockHashOrAddress(ctx, next) {
+        if (ctx.query.block) {
+            await this.getTransactionsByBlockHash(ctx, next)
+        } else if (ctx.query.address) {
+            await this.getTransactionsByAddress(ctx, next)
+        } else {
+            return next()
+        }
+    }
+
+
+    async getTransactionsByBlockHash(ctx, next) {
+        const blockHash = ctx.query.block;
+        const pageNum = ctx.query.pageNum || 0;
+
+        const isValid = ValidationUtils.validateBlockHash(blockHash);
+        if (isValid) {
+            const block = await this.blockService.getBlock(Utils.reverseHex(blockHash));
+            if (block) {
+                const txids = block.txs.map(tx => tx.txid());
+                const pagesTotal = Math.ceil(txids.length);
+                const txidsPaged = txids.slice(pageNum * 10, 10);
+                const txHashes = txidsPaged.map(txid => Utils.reverseHex(txid));
+                const mtxs = await Promise.all(txHashes.map(async txHash => await this.transactionService.getMetaTransaction(txHash)));
+
+                const result = {
+                    pagesTotal: pagesTotal
+                };
+
+                result.txs = await Promise.all(mtxs.map(async mtx => {
+                    const spentOutputs = await this.transactionService.getSpentOutputs(mtx.tx);
+                    return MappingService.mapGetTx(mtx, spentOutputs)
+                }));
+
+                ctx.body = result;
+                ctx.status = 200;
+            } else {
+                ctx.status = 400;
+                ctx.body = new ErrorMessage('Block not found')
+            }
+
+        } else {
+            ctx.status = 400;
+            ctx.body = new ErrorMessage('Blockhash is not valid')
+        }
+    }
+
 }
 
 module.exports = TransactionController;

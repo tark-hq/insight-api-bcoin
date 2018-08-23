@@ -76,6 +76,14 @@ class Utils {
         return out;
     }
 
+    static strToBuffer(str) {
+        return Buffer.from(str, 'hex');
+    }
+    static bufferToStr(buffer) {
+        return buffer.toString('hex');
+    }
+
+
 }
 
 module.exports = Utils;

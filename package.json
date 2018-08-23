@@ -29,7 +29,7 @@
   "bitcoreNode": "lib",
   "dependencies": {
     "assert": "^1.4.1",
-    "bcoin": "1.0.2",
+    "bcoin": "tuxcanfly/bcoin#index-outpoint",
     "koa": "^2.5.2",
     "koa-bodyparser": "^4.2.1",
     "koa-router": "^7.4.0"

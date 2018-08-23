@@ -78,14 +78,15 @@ class MappingService {
 
     /**
      *
-     * @param tx {TX} bcoin tx
-     * @param meta
-     * @param outputAddressesMetaMap
+     * @param mtx {MTX} bcoin tx
+     * @param spentOutputs from TransactionService
      */
-    static mapGetTx(tx, meta, outputAddressesMetaMap) {
-
-        const blockHash = Utils.reverseHex(meta.block);
-        const blockHeight = meta.height;
+    static mapGetTx(mtx, spentOutputs) {
+        const blockHashBuffer = mtx.block;
+        const blockHashBE = Utils.bufferToStr(blockHashBuffer);
+        const blockHash = Utils.reverseHex(blockHashBE);
+        const blockHeight = mtx.height;
+        const tx = mtx.tx;
 
         //in satoshis
         const valueIn = tx.inputs.reduce((accum, input) => accum + input.value, 0);
@@ -95,18 +96,18 @@ class MappingService {
         const txMeta = {
             blockhash: blockHash,
             blockheight: blockHeight,
-            confirmations: meta.confirmations,
-            time: meta.time,
-            blocktime: meta.time,
+            confirmations: mtx.confirmations,
+            time: mtx.time,
+            blocktime: mtx.time,
             valueOut: Utils.satoshiToBTC(valueOut),
             size: tx.getSize(),
             valueIn: Utils.satoshiToBTC(valueIn),
             fees: Utils.satoshiToBTC(fees)
         };
 
-        const mapVins = (input, index) => {
+        const vinsMapper = (input, index) => {
             return {
-                txid: input.prevout.hash,
+                txid: Utils.reverseHex(Utils.bufferToStr(input.prevout.hash)),
                 vout: input.prevout.index,
                 sequence: input.sequence,
                 n: index,
@@ -114,7 +115,7 @@ class MappingService {
                     hex: input.script.toRaw().toString('hex'),
                     asm: input.script.toASM()
                 },
-                addr: input.getAddress().toString(config.network),
+                addr: input.getAddress() && input.getAddress().toString(config.network),
                 valueSat: input.value,
                 value: Utils.satoshiToBTC(input.value)
             };
@@ -122,9 +123,18 @@ class MappingService {
 
         //todo whats the point of array of addresses in scriptPubKey?
 
-        const mapVouts = (output, index) => {
+        const voutsMapper = (spentOutputs, output, index) => {
 
-            const {spentTxId, spentIndex, spentHeight} = outputAddressesMetaMap[output.script.getAddress().toString(config.network)];
+            const address = output.script.getAddress() && output.script.getAddress().toString(config.network);
+            const addresses = address || [];
+
+            //const {spentTxId, spentIndex, spentHeight} = spentOutputs[index];
+            const spentOutputMTX = spentOutputs[index];
+            const spentTxId = spentOutputMTX && spentOutputMTX.tx.txid();
+            //todo
+            const spentIndex = null;
+            const spentHeight = spentOutputMTX && spentOutputMTX.height;
+
 
             return {
                 value: Utils.satoshiToBTC(output.value),
@@ -133,8 +143,8 @@ class MappingService {
                 scriptPubKey: {
                     hex: output.script.toRaw().toString('hex'),
                     asm: output.script.toASM(),
-                    addresses: [output.script.getAddress().toString(config.network)],
-                    type: output.script.getAddress().getType().toLowerCase()
+                    addresses: addresses,
+                    type: address && output.script.getAddress().getType().toLowerCase()
                 },
                 spentTxId: spentTxId,
                 spentIndex: spentIndex,
@@ -142,18 +152,19 @@ class MappingService {
             };
         };
 
-
         const txid = tx.txid();
         const version = tx.version;
         const lockTime = tx.locktime;
 
+        const vin = tx.inputs.map(vinsMapper);
+        const vouts = tx.outputs.map(voutsMapper.bind(null, spentOutputs));
 
         return {
             txid: txid,
             version: version,
             locktime: lockTime,
-            vin: tx.inputs.map(mapVins),
-            vout: tx.outputs.map(mapVouts),
+            vin: vin,
+            vout: vouts,
             ...txMeta
         };
 

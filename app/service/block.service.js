@@ -1,3 +1,5 @@
+const Utils = require('../util/utils')
+
 class BlockService {
 
     /**
@@ -28,7 +30,8 @@ class BlockService {
      * @return {Promise<Block>} block
      */
     async getBlock(hash) {
-        return await this.node.getBlock(hash);
+        const blockHashBuffer = Utils.strToBuffer(hash);
+        return await this.node.getBlock(blockHashBuffer);
     }
 
 
@@ -38,7 +41,8 @@ class BlockService {
      * @return {Promise<ChainEntry>} chain entry
      */
     async getEntry(blockHash) {
-        return await this.node.chain.getEntry(blockHash)
+        const blockHashBuffer = Utils.strToBuffer(hash);
+        return await this.node.chain.getEntry(blockHashBuffer)
     }
 
     /**
@@ -46,7 +50,8 @@ class BlockService {
      * @return {Promise<string>} hash of the next block
      */
     async getNextHash(blockHash) {
-        return await this.node.chain.getNextHash(blockHash);
+        const blockHashBuffer = Utils.strToBuffer(hash);
+        return await this.node.chain.getNextHash(blockHashBuffer);
     }
 
     /**
