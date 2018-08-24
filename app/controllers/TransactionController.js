@@ -29,7 +29,7 @@ class TransactionController {
         this.getRawTransaction = this.getRawTransaction.bind(this);
         this.getTransactionsByBlockHashOrAddress = this.getTransactionsByBlockHashOrAddress.bind(this);
         this.getTransactionsByBlockHash = this.getTransactionsByBlockHash.bind(this);
-        this.getTransactionsByAddress = this.getTransactionsByAddress.bind(this);
+        //this.getTransactionsByAddress = this.getTransactionsByAddress.bind(this);
     }
 
     async getTransaction(ctx, next) {
