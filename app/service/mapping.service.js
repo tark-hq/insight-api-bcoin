@@ -10,7 +10,7 @@ class MappingService {
      * @param blockHash {string}
      */
     static mapGetBlockHash(blockHash) {
-        return {blockHash: blockHash}
+        return {blockHash: Utils.reverseHex(blockHash)}
     }
 
     /**

@@ -21,7 +21,9 @@ class BlockService {
      * @return {Promise<string>} hash
      */
     async getBlockHash(blockHeight) {
-        return await this.node.chain.getHash(blockHeight);
+        const hashBuffer = await this.node.chain.getHash(blockHeight);
+
+        return hashBuffer && Utils.bufferToStr(hashBuffer);
     }
 
     /**
