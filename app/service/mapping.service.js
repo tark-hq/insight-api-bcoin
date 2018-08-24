@@ -23,17 +23,16 @@ class MappingService {
         const sizes = block.getSizes();
         const height = entry.height;
         const version = entry.version;
-        const merkleRoot = entry.merkleRoot;
-
+        const merkleRoot = Utils.reverseHex(Utils.bufferToStr(entry.merkleRoot));
         const txs = block.txs.map((tx) => tx.rhash());
         const time = entry.time;
         const nonce = entry.nonce;
         const bits = entry.bits;
         const bitsHex = bits.toString(16);
         const difficulty = Utils.bitsToDifficulty(bits);
-        const chainWork = entry.chainwork.toString();
+        const chainWork = entry.chainwork.toString(16).padStart(64, 0);
         const confirmations = bestBlockHeight - 1 + height;
-        const prevBlock = entry.prevBlock;
+        const prevBlock = entry.height === 0 ? null : entry.prevBlock;
         const rewardSatoshis = block.getClaimed();
         const reward = Utils.satoshiToBTC(rewardSatoshis);
 
@@ -54,7 +53,7 @@ class MappingService {
             chainwork: chainWork,
             confirmations: confirmations,
             previousblockhash: prevBlock,
-            nextblockhash: nextHash,
+            nextblockhash: Utils.reverseHex(nextHash),
             reward: reward,
             isMainChain: isMainChain,
             poolInfo: {}

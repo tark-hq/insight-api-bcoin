@@ -23,7 +23,11 @@ class BlockService {
     async getBlockHash(blockHeight) {
         const hashBuffer = await this.node.chain.getHash(blockHeight);
 
-        return hashBuffer && Utils.bufferToStr(hashBuffer);
+        if (hashBuffer) {
+            return Utils.bufferToStr(hashBuffer)
+        }
+
+        return hashBuffer;
     }
 
     /**
@@ -53,7 +57,13 @@ class BlockService {
      */
     async getNextHash(blockHash) {
         const blockHashBuffer = Utils.strToBuffer(blockHash);
-        return await this.node.chain.getNextHash(blockHashBuffer);
+        const nextHash = await this.node.chain.getNextHash(blockHashBuffer);
+
+        if (nextHash) {
+            return Utils.bufferToStr(nextHash);
+        }
+
+        return nextHash;
     }
 
     /**
