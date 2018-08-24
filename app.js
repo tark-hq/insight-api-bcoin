@@ -113,3 +113,6 @@ async function initComponents() {
     let node = await initBcoinNode();
     await initKoa(node)
 }
+
+
+module.exports = app;
