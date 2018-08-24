@@ -43,7 +43,7 @@ class BlockService {
      * @return {Promise<ChainEntry>} chain entry
      */
     async getEntry(blockHash) {
-        const blockHashBuffer = Utils.strToBuffer(hash);
+        const blockHashBuffer = Utils.strToBuffer(blockHash);
         return await this.node.chain.getEntry(blockHashBuffer)
     }
 
@@ -52,7 +52,7 @@ class BlockService {
      * @return {Promise<string>} hash of the next block
      */
     async getNextHash(blockHash) {
-        const blockHashBuffer = Utils.strToBuffer(hash);
+        const blockHashBuffer = Utils.strToBuffer(blockHash);
         return await this.node.chain.getNextHash(blockHashBuffer);
     }
 
