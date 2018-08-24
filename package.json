@@ -21,7 +21,7 @@
     "node": ">=8.2.0"
   },
   "scripts": {
-    "test": "jest"
+    "test": "NODE_ENV=test jest"
   },
   "main": "lib",
   "bitcoreNode": "lib",
