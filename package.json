@@ -21,9 +21,7 @@
     "node": ">=8.2.0"
   },
   "scripts": {
-    "test": "NODE_ENV=test mocha -R spec --recursive",
-    "regtest": "mocha -R spec regtest",
-    "perf": "mocha -R spec perf"
+    "test": "jest"
   },
   "main": "lib",
   "bitcoreNode": "lib",
@@ -34,5 +32,8 @@
     "koa-bodyparser": "^4.2.1",
     "koa-router": "^7.4.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "jest": "^23.5.0",
+    "supertest": "^3.1.0"
+  }
 }
