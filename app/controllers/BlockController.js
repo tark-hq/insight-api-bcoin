@@ -58,39 +58,34 @@ class BlockController {
 
 
     async getBlock(ctx, next) {
-        if (ctx.params.blockHash) {
-            const isValid = ValidationUtils.validateBlockHash(ctx.params.blockHash);
+        const isValid = ValidationUtils.validateBlockHash(ctx.params.blockHash);
 
-            if (isValid) {
-                const blockHash = Utils.reverseHex(ctx.params.blockHash);
+        if (isValid) {
+            const blockHash = Utils.reverseHex(ctx.params.blockHash);
 
-                try {
-                    const block = await this.blockService.getBlock(blockHash);
-                    const entry = await this.blockService.getEntry(blockHash);
-                    const nextHash = await this.blockService.getNextHash(blockHash);
+            try {
+                const block = await this.blockService.getBlock(blockHash);
+                const entry = await this.blockService.getEntry(blockHash);
+                const nextHash = await this.blockService.getNextHash(blockHash);
 
-                    if (!block || !entry) {
-                        ctx.status = 404;
-                        ctx.body = new ErrorMessage('Block not found')
-                    } else {
-                        const bestBlockHeight = await this.blockService.getBestBlockHeight();
-                        const isMainChain = await this.blockService.isMainChain(entry);
+                if (!block || !entry) {
+                    ctx.status = 404;
+                    ctx.body = new ErrorMessage('Block not found')
+                } else {
+                    const bestBlockHeight = await this.blockService.getBestBlockHeight();
+                    const isMainChain = await this.blockService.isMainChain(entry);
 
-                        ctx.status = 200;
-                        ctx.body = MappingService.mapGetBlock(block, entry, nextHash, bestBlockHeight, isMainChain);
-                    }
-                } catch (e) {
-                    console.error(e);
-                    ctx.status = 500;
-                    ctx.body = new ErrorMessage('Could not get block, internal server error')
+                    ctx.status = 200;
+                    ctx.body = MappingService.mapGetBlock(block, entry, nextHash, bestBlockHeight, isMainChain);
                 }
-            } else {
-                ctx.status = 400;
-                ctx.body = new ErrorMessage('Block hash is not valid')
+            } catch (e) {
+                console.error(e);
+                ctx.status = 500;
+                ctx.body = new ErrorMessage('Could not get block, internal server error')
             }
         } else {
             ctx.status = 400;
-            ctx.body = new ErrorMessage('Block hash does not present');
+            ctx.body = new ErrorMessage('Block hash is not valid')
         }
     }
 
