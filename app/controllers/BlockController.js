@@ -1,6 +1,5 @@
 const ErrorMessage = require('../model/ErrorMessage');
 
-const AddressService = require('../service/address.service');
 const BlockService = require('../service/block.service');
 const MappingService = require('../service/mapping.service');
 
