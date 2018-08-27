@@ -3,6 +3,7 @@ const TX = require('bcoin').TX;
 const Utils = require('../util/utils');
 const config = require('../../config');
 const ErrorMessage = require('../model/ErrorMessage');
+const SpentOutput = require('../model/SpentOutput');
 const AddressService = require('../service/address.service');
 
 class TransactionService {
@@ -92,12 +93,28 @@ class TransactionService {
     async getSpentOutputs(tx) {
         return await Promise.all(tx.outputs.map(async (output, index) => {
             const outpoint = Outpoint.fromOptions({
-                hash: Utils.strToBuffer(tx.hash()),
+                hash: tx.hash(),
                 index: index
             });
 
             const spentTxHashBuffer = await this.node.outpointindex.getTX(outpoint);
-            return !!spentTxHashBuffer && await this.node.getMeta(spentTxHashBuffer);
+
+            if (spentTxHashBuffer) {
+                const spentMTx = await this.node.getMeta(spentTxHashBuffer);
+
+                const spentTx = spentMTx.tx;
+
+
+                const inputIndex = spentTx.inputs.findIndex(inputIndexPredicate.bind(null, tx, index));
+
+                function inputIndexPredicate(tx, originalIndex, input) {
+                    return input.prevout.hash.equals(tx.hash()) && input.prevout.index === index;
+                }
+
+                return new SpentOutput(inputIndex, spentMTx);
+            }
+
+            return null;
         }));
     }
 

@@ -128,28 +128,29 @@ class MappingService {
             const address = output.script.getAddress() && output.script.getAddress().toString(config.network);
             const addresses = address || [];
 
-            //const {spentTxId, spentIndex, spentHeight} = spentOutputs[index];
-            const spentOutputMTX = spentOutputs[index];
-            const spentTxId = spentOutputMTX && spentOutputMTX.tx.txid();
-            //todo
-            const spentIndex = null;
-            const spentHeight = spentOutputMTX && spentOutputMTX.height;
-
-
-            return {
-                value: Utils.satoshiToBTC(output.value),
-                valueSat: output.value,
+            let result = {
+                value: Utils.satoshiToBTC(output.value).toFixed(8),
                 n: index,
                 scriptPubKey: {
                     hex: output.script.toRaw().toString('hex'),
                     asm: output.script.toASM(),
-                    addresses: addresses,
+                    addresses: [addresses],
                     type: address && output.script.getAddress().getType().toLowerCase()
                 },
-                spentTxId: spentTxId,
-                spentIndex: spentIndex,
-                spentHeight: spentHeight
+                spentTxId: null,
+                spentIndex: null,
+                spentHeight: null
             };
+
+            const spentOutput = spentOutputs[index];
+
+            if (spentOutput) {
+                result.spentTxId = spentOutput.tx.txid();
+                result.spentHeight = spentOutput.mtx.height;
+                result.spentIndex = spentOutput.inputIndex;
+            }
+
+            return result;
         };
 
         const txid = tx.txid();
