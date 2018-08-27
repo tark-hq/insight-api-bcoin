@@ -68,7 +68,7 @@ class MappingService {
      */
     static mapGetRawBlock(rawBlock) {
         return {
-            rawBlock: rawBlock
+            rawblock: rawBlock
         }
     }
 
