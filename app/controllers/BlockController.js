@@ -59,10 +59,11 @@ class BlockController {
 
     async getBlock(ctx, next) {
         if (ctx.params.blockHash) {
-            const blockHash = Utils.reverseHex(ctx.params.blockHash);
-            const isValid = ValidationUtils.validateBlockHash(blockHash);
+            const isValid = ValidationUtils.validateBlockHash(ctx.params.blockHash);
 
             if (isValid) {
+                const blockHash = Utils.reverseHex(ctx.params.blockHash);
+
                 try {
                     const block = await this.blockService.getBlock(blockHash);
                     const entry = await this.blockService.getEntry(blockHash);

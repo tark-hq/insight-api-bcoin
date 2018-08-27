@@ -32,13 +32,14 @@ class MappingService {
         const difficulty = Utils.bitsToDifficulty(bits);
         const chainWork = entry.chainwork.toString(16).padStart(64, 0);
         const confirmations = bestBlockHeight - 1 + height;
-        const prevBlock = entry.height === 0 ? null : entry.prevBlock;
+        const prevBlock = entry.height === 0 ? null : Utils.reverseHex(Utils.bufferToStr(entry.prevBlock));
         const rewardSatoshis = block.getClaimed();
         const reward = Utils.satoshiToBTC(rewardSatoshis);
 
         //todo maybe implement witnessSize?
         //todo chainReward - probably not necessary
         //todo poolInfo - do or not
+        //todo reward - include fees?
         return {
             hash: block.rhash(),
             size: sizes.size,
