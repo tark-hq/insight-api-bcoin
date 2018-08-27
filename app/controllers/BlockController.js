@@ -96,51 +96,44 @@ class BlockController {
 
 
     async getRawBlock(ctx, next) {
-        if (ctx.params.blockHashOrHeight) {
-            const blockHashOrHeight = ctx.params.blockHashOrHeight;
-            const isBlockHash = ValidationUtils.validateBlockHash(blockHashOrHeight);
-            const isBlockHeight = ValidationUtils.validateBlockHeight(blockHashOrHeight);
+        const blockHash = ctx.params.blockHashOrHeight;
+        const blockHeight = Number(ctx.params.blockHashOrHeight);
+        const isBlockHash = ValidationUtils.validateBlockHash(blockHash);
+        const isBlockHeight = ValidationUtils.validateBlockHeight(blockHeight);
 
-            if (isBlockHash) {
-                try {
-                    const block = await this.blockService.getBlock(blockHashOrHeight);
-                    if (!block) {
-                        ctx.status = 404;
-                        ctx.body = new ErrorMessage('Block not found')
-                    }
-
-                    const rawBlock = block.toRaw().toString('hex');
-                    ctx.status = 200;
-                    ctx.body = MappingService.mapGetRawBlock(rawBlock);
-
-                } catch (e) {
-                    console.error(e);
-                    ctx.status = 500;
-                    ctx.body = new ErrorMessage('Could not get raw block, internal server error')
-                }
-            }
-            else if (isBlockHeight) {
-                const blockHash = await this.blockService.getBlockHash(blockHashOrHeight);
-                const block = await this.blockService.getBlock(blockHash);
-
-                if (!block) {
-                    ctx.status = 404;
-                    ctx.body = new ErrorMessage('Block not found')
-                }
-
-                const rawBlock = block.toRaw().toString('hex');
-                ctx.status = 200;
-                ctx.body = MappingService.mapGetRawBlock(rawBlock);
-            } else {
-                ctx.status = 400;
-                ctx.body = new ErrorMessage('Block hash or height is not valid');
-            }
-        } else {
+        if (!isBlockHash && !isBlockHeight) {
             ctx.status = 400;
-            ctx.body = new ErrorMessage('Block hash or height does not present');
+            ctx.body = new ErrorMessage('Block hash or height is not valid');
+            return;
+        }
+
+        let hash;
+
+        if (isBlockHeight) {
+            hash = await this.blockService.getBlockHash(blockHeight);
+        } else if (isBlockHash) {
+            hash = Utils.reverseHex(blockHash);
+        }
+
+        try {
+            const block = await this.blockService.getBlock(hash);
+
+            if (!block) {
+                ctx.status = 404;
+                ctx.body = new ErrorMessage('Raw block not found');
+                return;
+            }
+
+            const rawBlock = block.toRaw().toString('hex');
+            ctx.status = 200;
+            ctx.body = MappingService.mapGetRawBlock(rawBlock);
+
+        } catch (e) {
+            console.error(e);
+            ctx.status = 500;
+            ctx.body = new ErrorMessage('Could not get raw block, internal server error')
         }
     }
-
 }
 
 module.exports = BlockController;
