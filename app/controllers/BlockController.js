@@ -27,32 +27,27 @@ class BlockController {
 
 
     async getBlockHash(ctx, next) {
-        if (ctx.params.height) {
-            const blockHeight = parseInt(ctx.params.height);
-            const isValid = ValidationUtils.validateBlockHeight(blockHeight);
+        const blockHeight = parseInt(ctx.params.height);
+        const isValid = ValidationUtils.validateBlockHeight(blockHeight);
 
-            if (isValid) {
-                try {
-                    const blockHash = await this.blockService.getBlockHash(blockHeight);
-                    if (!blockHash) {
-                        ctx.status = 404;
-                        ctx.body = new ErrorMessage('Block not found')
-                    } else {
-                        ctx.status = 200;
-                        ctx.body = MappingService.mapGetBlockHash(blockHash);
-                    }
-                } catch (e) {
-                    console.error(e);
-                    ctx.status = 500;
-                    ctx.body = new ErrorMessage('Could not get block hash, internal server error')
+        if (isValid) {
+            try {
+                const blockHash = await this.blockService.getBlockHash(blockHeight);
+                if (!blockHash) {
+                    ctx.status = 404;
+                    ctx.body = new ErrorMessage('Block not found')
+                } else {
+                    ctx.status = 200;
+                    ctx.body = MappingService.mapGetBlockHash(blockHash);
                 }
-            } else {
-                ctx.status = 400;
-                ctx.body = new ErrorMessage('Block index (height) is not valid');
+            } catch (e) {
+                console.error(e);
+                ctx.status = 500;
+                ctx.body = new ErrorMessage('Could not get block hash, internal server error')
             }
         } else {
             ctx.status = 400;
-            ctx.body = new ErrorMessage('Block index (height) does not present')
+            ctx.body = new ErrorMessage('Block index (height) is not valid');
         }
     }
 
