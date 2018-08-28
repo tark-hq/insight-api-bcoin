@@ -75,7 +75,7 @@ class TransactionController {
                     ctx.body = MappingService.mapGetRawTx(rawTx);
                 } else {
                     ctx.status = 404;
-                    ctx.body = new ErrorMessage('Not found');
+                    ctx.body = new ErrorMessage('Raw Tx not found');
                 }
             } catch (e) {
                 console.error(e);
