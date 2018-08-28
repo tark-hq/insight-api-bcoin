@@ -37,10 +37,10 @@ class TransactionService {
     async getMetaTransaction(hash) {
         const hashBuffer = Utils.strToBuffer(hash);
         let meta = await this.node.getMeta(hashBuffer);
-        const view = await this.node.getMetaView(meta);
 
         if (meta) {
-            meta.tx.inputs = meta.tx.inputs.map(this._inputValuesMapper.bind(null, view));
+			const view = await this.node.getMetaView(meta);
+			meta.tx.inputs = meta.tx.inputs.map(this._inputValuesMapper.bind(null, view));
             meta.confirmations = this.node.chain.height + 1 - meta.height;
         }
 
