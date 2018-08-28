@@ -89,23 +89,37 @@ class MappingService {
         const tx = mtx.tx;
 
         //in satoshis
-        const valueIn = tx.inputs.reduce((accum, input) => accum + input.value, 0);
-        const valueOut = tx.outputs.reduce((accum, output) => accum + output.value, 0);
-        const fees = tx.inputs.reduce((accum, input) => accum + input.value, 0) - tx.outputs.reduce((accum, output) => accum + output.value, 0);
 
-        const txMeta = {
+
+        let txMeta = {
             blockhash: blockHash,
             blockheight: blockHeight,
             confirmations: mtx.confirmations,
             time: mtx.time,
             blocktime: mtx.time,
-            valueOut: Utils.satoshiToBTC(valueOut),
-            size: tx.getSize(),
-            valueIn: Utils.satoshiToBTC(valueIn),
-            fees: Utils.satoshiToBTC(fees)
+            size: tx.getSize()
         };
 
+        if (tx.isCoinbase()) {
+            txMeta.isCoinBase = true;
+        } else {
+            const valueIn = tx.inputs.reduce((accum, input) => accum + input.value, 0);
+            txMeta.valueIn = Utils.satoshiToBTC(valueIn);
+            const fees = tx.inputs.reduce((accum, input) => accum + input.value, 0) - tx.outputs.reduce((accum, output) => accum + output.value, 0);
+            txMeta.fees = Utils.satoshiToBTC(fees);
+        }
+
+        const valueOut = tx.outputs.reduce((accum, output) => accum + output.value, 0);
+        txMeta.valueOut = Utils.satoshiToBTC(valueOut);
+
         const vinsMapper = (input, index) => {
+            if (tx.isCoinbase()) {
+                return {
+                    coinbase: input.script.toRaw().toString('hex'),
+                    n: index,
+                    sequence: input.sequence,
+                };
+            }
             return {
                 txid: Utils.reverseHex(Utils.bufferToStr(input.prevout.hash)),
                 vout: input.prevout.index,
