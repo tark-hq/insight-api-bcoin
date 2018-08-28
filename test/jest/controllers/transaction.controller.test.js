@@ -15,6 +15,30 @@ afterAll(async () => {
 });
 
 
+function fixVinFields(responseBody, expected) {
+    //difference between different bcoin versions, bitcore uses older version
+    //also, doubleSpentTxID is always null in insight api (unimplemented option)
+    expected.vin = expected.vin.map(vinElem => {
+        //todo fix asm
+        delete vinElem.scriptSig.asm;
+        delete vinElem.doubleSpentTxID;
+        return vinElem;
+    });
+
+    responseBody.vin = responseBody.vin.map(vinElem => {
+        //todo fix asm
+        delete vinElem.scriptSig.asm;
+        return vinElem;
+    });
+
+}
+
+function removeField(fieldName, responseBody, expected) {
+    delete expected[fieldName];
+    delete responseBody[fieldName];
+}
+
+
 describe('Get transaction test [/tx/:txid]', () => {
 
     test('Get transaction f3ea8a564822fbeb0ceb952864f06331b4659eaae743aef9a19b79d1505536ac', async () => {
@@ -26,28 +50,15 @@ describe('Get transaction test [/tx/:txid]', () => {
 
         expect(typeof response.body.confirmations === 'number').toBeTruthy();
         expect(response.body.confirmations).toBeGreaterThanOrEqual(0);
+
         //we have tested its the number, removing field
-        delete expected.confirmations;
-        delete response.body.confirmations;
+        removeField('confirmations', response.body, expected);
 
-        //difference between different bcoin versions, bitcore uses older version
-        //also, doubleSpentTxID is always null in insight api (unimplemented option)
-        expected.vin = expected.vin.map(vinElem => {
-            //todo fix asm
-            delete vinElem.scriptSig.asm;
-            delete vinElem.doubleSpentTxID;
-            return vinElem;
-        });
-
-        response.body.vin = response.body.vin.map(vinElem => {
-            delete vinElem.scriptSig.asm;
-            return vinElem;
-        });
-
+        //removing some unstable fields
+        fixVinFields(response.body, expected);
 
         expect(response.body).toEqual(expected);
     });
-
 
     test('Get transaction 020d3df275eb882c0119732c2a6a7e756aed7a7a5ba480dcfab396cb66820d4b', async () => {
         let response = await request(app.callback()).get('/tx/020d3df275eb882c0119732c2a6a7e756aed7a7a5ba480dcfab396cb66820d4b');
@@ -58,24 +69,14 @@ describe('Get transaction test [/tx/:txid]', () => {
 
         expect(typeof response.body.confirmations === 'number').toBeTruthy();
         expect(response.body.confirmations).toBeGreaterThanOrEqual(0);
+
         //we have tested its the number, removing field
-        delete expected.confirmations;
-        delete response.body.confirmations;
+        removeField('confirmations', response.body, expected);
 
-        //difference between different bcoin versions, bitcore uses older version
-        //also, doubleSpentTxID is always null in insight api (unimplemented option)
-        expected.vin = expected.vin.map(vinElem => {
-            //todo fix asm
-            delete vinElem.scriptSig.asm;
-            delete vinElem.doubleSpentTxID;
-            return vinElem;
-        });
-
-        response.body.vin = response.body.vin.map(vinElem => {
-            delete vinElem.scriptSig.asm;
-            return vinElem;
-        });
+        //removing some unstable fields
+        fixVinFields(response.body, expected);
 
         expect(response.body).toEqual(expected);
     });
+
 });
