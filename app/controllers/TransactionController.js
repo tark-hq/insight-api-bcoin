@@ -109,7 +109,7 @@ class TransactionController {
             const block = await this.blockService.getBlock(Utils.reverseHex(blockHash));
             if (block) {
                 const txids = block.txs.map(tx => tx.txid());
-                const pagesTotal = Math.ceil(txids.length);
+                const pagesTotal = Math.ceil(txids.length / 10);
                 const txidsPaged = txids.slice(pageNum * 10, 10);
                 const txHashes = txidsPaged.map(txid => Utils.reverseHex(txid));
                 const mtxs = await Promise.all(txHashes.map(async txHash => await this.transactionService.getMetaTransaction(txHash)));
