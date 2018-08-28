@@ -18,7 +18,7 @@ class TransactionController {
      */
     constructor(node) {
         if (!node) {
-            throw new Error("Bcoin {Fullnode} expected as dependency")
+            throw new Error('Bcoin {Fullnode} expected as dependency');
         }
 
         this.transactionService = new TransactionService(node);
@@ -33,79 +33,69 @@ class TransactionController {
     }
 
     async getTransaction(ctx, next) {
-        if (ctx.params.txid) {
-            let txid = ctx.params.txid;
-            const isValid = ValidationUtils.validateTxid(txid);
-            if (isValid) {
-                try {
-                    //reverse byte-order, software\explorers shows big-endian hashes
-                    const txHash = Utils.reverseHex(txid);
-                    const mtx = await this.transactionService.getMetaTransaction(txHash);
+        let txid = ctx.params.txid;
+        const isValid = ValidationUtils.validateTxid(txid);
+        if (isValid) {
+            try {
+                //reverse byte-order, software\explorers shows big-endian hashes
+                const txHash = Utils.reverseHex(txid);
+                const mtx = await this.transactionService.getMetaTransaction(txHash);
+
+                if (mtx) {
                     const spentOutputs = await this.transactionService.getSpentOutputs(mtx.tx);
 
-                    if (mtx) {
-                        ctx.status = 200;
-                        ctx.body = MappingService.mapGetTx(mtx, spentOutputs)
-                    } else {
-                        ctx.status = 404;
-                        ctx.body = new ErrorMessage('Not found');
-                    }
-                } catch (e) {
-                    console.error(e);
-                    ctx.status = 500;
-                    ctx.body = new ErrorMessage('Could not get tx, internal server error');
+                    ctx.status = 200;
+                    ctx.body = MappingService.mapGetTx(mtx, spentOutputs);
+                } else {
+                    ctx.status = 404;
+                    ctx.body = new ErrorMessage('Tx not found');
                 }
-            } else {
-                ctx.status = 404;
-                ctx.body = new ErrorMessage('Txid is not valid')
+            } catch (e) {
+                console.error(e);
+                ctx.status = 500;
+                ctx.body = new ErrorMessage('Could not get tx, internal server error');
             }
         } else {
             ctx.status = 400;
-            ctx.body = new ErrorMessage('Txid is not specified')
+            ctx.body = new ErrorMessage('Txid is not valid');
         }
-
     }
 
     async getRawTransaction(ctx, next) {
-        if (ctx.params.txid) {
-            let txid = ctx.params.txid;
-            const isValid = ValidationUtils.validateTxid(txid);
-            if (isValid) {
-                try {
-                    //reverse byte-order, software\explorers shows big-endian hashes
-                    const txIdLittleEndian = Utils.reverseHex(txid);
-                    const rawTx = await this.transactionService.getRawTransaction(txIdLittleEndian);
+        let txid = ctx.params.txid;
+        const isValid = ValidationUtils.validateTxid(txid);
+        if (isValid) {
+            try {
+                //reverse byte-order, software\explorers shows big-endian hashes
+                const txIdLittleEndian = Utils.reverseHex(txid);
+                const rawTx = await this.transactionService.getRawTransaction(txIdLittleEndian);
 
-                    if (rawTx) {
-                        ctx.status = 200;
-                        ctx.body = MappingService.mapGetRawTx(rawTx);
-                    } else {
-                        ctx.status = 404;
-                        ctx.body = new ErrorMessage('Not found');
-                    }
-                } catch (e) {
-                    console.error(e);
-                    ctx.status = 500;
-                    ctx.body = new ErrorMessage('Could not get rawTx, internal server error');
+                if (rawTx) {
+                    ctx.status = 200;
+                    ctx.body = MappingService.mapGetRawTx(rawTx);
+                } else {
+                    ctx.status = 404;
+                    ctx.body = new ErrorMessage('Not found');
                 }
-            } else {
-                ctx.status = 400;
-                ctx.body = new ErrorMessage('Txid is not valid')
+            } catch (e) {
+                console.error(e);
+                ctx.status = 500;
+                ctx.body = new ErrorMessage('Could not get rawTx, internal server error');
             }
         } else {
             ctx.status = 400;
-            ctx.body = new ErrorMessage('Txid is not specified')
+            ctx.body = new ErrorMessage('Txid is not valid');
         }
     }
 
 
     async getTransactionsByBlockHashOrAddress(ctx, next) {
         if (ctx.query.block) {
-            await this.getTransactionsByBlockHash(ctx, next)
+            await this.getTransactionsByBlockHash(ctx, next);
         } else if (ctx.query.address) {
-            await this.getTransactionsByAddress(ctx, next)
+            await this.getTransactionsByAddress(ctx, next);
         } else {
-            return next()
+            return next();
         }
     }
 
@@ -130,19 +120,19 @@ class TransactionController {
 
                 result.txs = await Promise.all(mtxs.map(async mtx => {
                     const spentOutputs = await this.transactionService.getSpentOutputs(mtx.tx);
-                    return MappingService.mapGetTx(mtx, spentOutputs)
+                    return MappingService.mapGetTx(mtx, spentOutputs);
                 }));
 
                 ctx.body = result;
                 ctx.status = 200;
             } else {
                 ctx.status = 400;
-                ctx.body = new ErrorMessage('Block not found')
+                ctx.body = new ErrorMessage('Block not found');
             }
 
         } else {
             ctx.status = 400;
-            ctx.body = new ErrorMessage('Blockhash is not valid')
+            ctx.body = new ErrorMessage('Blockhash is not valid');
         }
     }
 
