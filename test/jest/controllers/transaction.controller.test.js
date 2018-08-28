@@ -1,11 +1,14 @@
 const app = require('../../../app');
 const request = require('supertest');
+const omitDeep = require('omit-deep');
 const tx_020d3d = require('./expects/tx_020d3d');
 const tx_f3ea8a = require('./expects/tx_f3ea8a');
 const tx_74a79a = require('./expects/tx_74a79a');
 const tx_d822cf4 = require('./expects/tx_d822cf4');
 const tx_517c1b = require('./expects/tx_517c1b');
 const tx_d2359a = require('./expects/tx_d2359a');
+const txs_block_000000000ee8a5ff = require('./expects/txs_block_000000000ee8a5fff7cebf031648bb56821f5ec77aba9c52829cd0fe2e3cc26e');
+const txs_block_00000000a90269b2 = require('./expects/txs_block_00000000a90269b293a023104412897d8e9ef0b6fcbd2b4fa694f8b0d9ea9a8f');
 global.app = app;
 
 
@@ -17,34 +20,6 @@ beforeAll(async () => {
 afterAll(async () => {
     await global.app.stopApp();
 });
-
-
-function fixVinFields(responseBody, expected) {
-    //difference between different bcoin versions, bitcore uses older version
-    //also, doubleSpentTxID is always null in insight api (unimplemented option)
-    expected.vin = expected.vin.map(vinElem => {
-        //todo fix asm
-        if (vinElem.scriptSig) {
-            delete vinElem.scriptSig.asm;
-        }
-        delete vinElem.doubleSpentTxID;
-        return vinElem;
-    });
-
-    responseBody.vin = responseBody.vin.map(vinElem => {
-        //todo fix asm
-        if (vinElem.scriptSig) {
-            delete vinElem.scriptSig.asm;
-        }
-        return vinElem;
-    });
-
-}
-
-function removeField(fieldName, responseBody, expected) {
-    delete expected[fieldName];
-    delete responseBody[fieldName];
-}
 
 
 describe('Get transaction test [/tx/:txid]', () => {
@@ -59,13 +34,8 @@ describe('Get transaction test [/tx/:txid]', () => {
         expect(typeof response.body.confirmations === 'number').toBeTruthy();
         expect(response.body.confirmations).toBeGreaterThanOrEqual(0);
 
-        //we have tested its the number, removing field
-        removeField('confirmations', response.body, expected);
-
-        //removing some unstable fields
-        fixVinFields(response.body, expected);
-
-        expect(response.body).toEqual(expected);
+        expect(ignoring(response.body, ['confirmations', 'asm', 'doubleSpentTxID']))
+            .toEqual(ignoring(expected, ['confirmations', 'asm', 'doubleSpentTxID']));
     });
 
     test('Get transaction 020d3df275eb882c0119732c2a6a7e756aed7a7a5ba480dcfab396cb66820d4b', async () => {
@@ -78,13 +48,8 @@ describe('Get transaction test [/tx/:txid]', () => {
         expect(typeof response.body.confirmations === 'number').toBeTruthy();
         expect(response.body.confirmations).toBeGreaterThanOrEqual(0);
 
-        //we have tested its the number, removing field
-        removeField('confirmations', response.body, expected);
-
-        //removing some unstable fields
-        fixVinFields(response.body, expected);
-
-        expect(response.body).toEqual(expected);
+        expect(ignoring(response.body, ['confirmations', 'asm', 'doubleSpentTxID']))
+            .toEqual(ignoring(expected, ['confirmations', 'asm', 'doubleSpentTxID']));
     });
 
     test('Get transaction 74a79af4438404a55783e23077bfb0ad40c1c8c2ea584c2779ef4cdb31831819', async () => {
@@ -97,13 +62,8 @@ describe('Get transaction test [/tx/:txid]', () => {
         expect(typeof response.body.confirmations === 'number').toBeTruthy();
         expect(response.body.confirmations).toBeGreaterThanOrEqual(0);
 
-        //we have tested its the number, removing field
-        removeField('confirmations', response.body, expected);
-
-        //removing some unstable fields
-        fixVinFields(response.body, expected);
-
-        expect(response.body).toEqual(expected);
+        expect(ignoring(response.body, ['confirmations', 'asm', 'doubleSpentTxID']))
+            .toEqual(ignoring(expected, ['confirmations', 'asm', 'doubleSpentTxID']));
     });
 
 
@@ -117,18 +77,12 @@ describe('Get transaction test [/tx/:txid]', () => {
         expect(typeof response.body.confirmations === 'number').toBeTruthy();
         expect(response.body.confirmations).toBeGreaterThanOrEqual(0);
 
-        //we have tested its the number, removing field
-        removeField('confirmations', response.body, expected);
-
-        //removing some unstable fields
-        fixVinFields(response.body, expected);
-
-        expect(response.body).toEqual(expected);
+        expect(ignoring(response.body, ['confirmations', 'asm', 'doubleSpentTxID']))
+            .toEqual(ignoring(expected, ['confirmations', 'asm', 'doubleSpentTxID']));
     });
 
     test('Get transaction invalid transaction id (chars)', async () => {
         let response = await request(app.callback()).get('/tx/zzzzz');
-
 
         expect(response.status).toEqual(400);
         expect(response.body.message).toEqual('Txid is not valid');
@@ -163,6 +117,7 @@ describe('Get rawtransaction test [/rawTx/:txid]', () => {
         expect(response.status).toEqual(200);
         expect(response.body).toEqual(expected);
     });
+
     test('Get rawTransaction 020d3df275eb882c0119732c2a6a7e756aed7a7a5ba480dcfab396cb66820d4b', async () => {
         let response = await request(app.callback()).get('/rawTx/020d3df275eb882c0119732c2a6a7e756aed7a7a5ba480dcfab396cb66820d4b');
 
@@ -216,3 +171,55 @@ describe('Get rawtransaction test [/rawTx/:txid]', () => {
     });
 
 });
+
+describe('Get transactions by blockHash or address test [/txs/?[block\\address=...]]', () => {
+
+    test('Get transactions by block 000000000ee8a5fff7cebf031648bb56821f5ec77aba9c52829cd0fe2e3cc26e', async () => {
+        let response = await request(app.callback()).get('/txs/?block=000000000ee8a5fff7cebf031648bb56821f5ec77aba9c52829cd0fe2e3cc26e');
+
+        let expected = txs_block_000000000ee8a5ff;
+
+        expect(response.status).toEqual(200);
+        expect(ignoring(response.body, ['confirmations', 'asm', 'doubleSpentTxID']))
+            .toEqual(ignoring(expected, ['confirmations', 'asm', 'doubleSpentTxID']));
+    });
+
+    test('Get transactions by block 00000000a90269b293a023104412897d8e9ef0b6fcbd2b4fa694f8b0d9ea9a8f', async () => {
+        let response = await request(app.callback()).get('/txs/?block=00000000a90269b293a023104412897d8e9ef0b6fcbd2b4fa694f8b0d9ea9a8f');
+
+        let expected = txs_block_00000000a90269b2;
+
+        expect(response.status).toEqual(200);
+        expect(ignoring(response.body, ['confirmations', 'asm', 'doubleSpentTxID']))
+            .toEqual(ignoring(expected, ['confirmations', 'asm', 'doubleSpentTxID']));
+    });
+
+
+    test('Get transactions by invalid blockHash (chars)', async () => {
+        let response = await request(app.callback()).get('/txs/?block=zzzzzz');
+
+        expect(response.status).toEqual(400);
+        expect(response.body.message).toEqual('Blockhash is not valid');
+
+    });
+
+    test('Get transactions by null blockHash', async () => {
+        let response = await request(app.callback()).get('/txs/?block=');
+
+        expect(response.status).toEqual(404);
+    });
+
+
+    test('Get transactions by height instead of hash', async () => {
+        let response = await request(app.callback()).get('/txs/?block=123');
+
+        expect(response.status).toEqual(400);
+        expect(response.body.message).toEqual('Blockhash is not valid');
+    });
+
+});
+
+
+function ignoring(obj, fieldNames) {
+    return omitDeep(obj, fieldNames);
+}
