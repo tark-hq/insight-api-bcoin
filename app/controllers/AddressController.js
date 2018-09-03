@@ -14,7 +14,7 @@ class AddressController {
      */
     constructor(node) {
         if (!node) {
-            throw new Error("Bcoin {Fullnode} expected as dependency")
+            throw new Error('Bcoin {Fullnode} expected as dependency');
         }
 
         this.node = node;
@@ -49,18 +49,18 @@ class AddressController {
 
         if (isValid) {
             try {
-                const txs = await this.addressService.getTransactionsByAddress(addr, true);
-                const mtxs = await this.addressService.getMetasByAddress(addr);
-                if (txs && txs.length > 0) {
-                    const result = MappingService.mapGetAddress(addr, mtxs, txs, this.node.chain.height, options);
+                const mtxs = await this.transactionService.getMetasByAddress(addr);
+                if (mtxs && mtxs.length > 0) {
+                    const result = MappingService.mapGetAddress(addr, mtxs, this.node.chain.height, options);
                     ctx.body = result;
                     ctx.status = 200;
                 } else {
-                    ctx.body = new ErrorMessage('Not found');
+                    ctx.body = new ErrorMessage('No transactions on address');
                     ctx.status = 404;
                 }
             }
             catch (e) {
+                console.error(e);
                 ctx.body = new ErrorMessage('Internal server error');
                 ctx.status = 500;
             }
@@ -112,7 +112,7 @@ class AddressController {
     async getAddressesUnspentOutputs(ctx, next) {
         let addressesStr = ctx.params.addresses;
 
-        if(ctx.req.method === 'POST') {
+        if (ctx.req.method === 'POST') {
             addressesStr = ctx.body.addrs;
         }
 
