@@ -1,6 +1,6 @@
 const assert = require('assert');
 const Address = require('bcoin').Address;
-
+const config = require('../../config');
 class Utils {
     /**
      * Converts bits to difficulty
@@ -37,13 +37,9 @@ class Utils {
      */
     static addrStrToAddress(addrStr) {
         try {
-            return Address.fromBase58(addrStr)
+            return Address.fromString(addrStr, config.network);
         } catch (e) {
-            try {
-                return Address.fromBech32(addrStr)
-            } catch (e) {
-                throw new Error(e);
-            }
+            throw new Error(e);
         }
 
     }
@@ -79,6 +75,7 @@ class Utils {
     static strToBuffer(str) {
         return Buffer.from(str, 'hex');
     }
+
     static bufferToStr(buffer) {
         return buffer.toString('hex');
     }
