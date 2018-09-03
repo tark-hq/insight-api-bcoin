@@ -58,7 +58,7 @@ async function startApp() {
         const router = new Router();
 
         router
-            //Blocks
+        //Blocks
             .get('/block-index/:height', blockController.getBlockHash)
             .get('/block/:blockHash', blockController.getBlock)
             .get('/rawBlock/:blockHashOrHeight', blockController.getRawBlock)
@@ -71,9 +71,9 @@ async function startApp() {
             //Address
             .get('/addr/:address', addressController.getAddressInfo)
             .get('/addr/:address/balance', addressController.getAddressBalance)
-            .get('/addr/:address/totalReceived', addressController.getAddressBalance)
-            .get('/addr/:address/totalSent', addressController.getAddressBalance)
-            .get('/addr/:address/unconfirmedBalance', addressController.getAddressBalance)
+            .get('/addr/:address/totalReceived', addressController.getAddressTotalReceived)
+            .get('/addr/:address/totalSent', addressController.getAddressTotalSent)
+            .get('/addr/:address/unconfirmedBalance', addressController.getAddressUnconfirmedBalance)
             .get('/addr/:address/utxo', addressController.getAddressUnspentOutputs)
             .get('/addrs/:addresses/utxo', addressController.getAddressesUnspentOutputs)
             .post('/addrs/utxo', addressController.getAddressesUnspentOutputs);
