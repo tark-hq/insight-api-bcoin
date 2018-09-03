@@ -285,6 +285,33 @@ class MappingService {
             };
         });
     }
+
+    static mapSocketIOTXEvent(tx) {
+
+        const valueOutSat = tx.outputs.reduce((accum, output) => accum + output.value, 0);
+        const vouts = tx.outputs
+            .filter(output => output.getAddress())
+            .map(output => {
+                const address = output.getAddress();
+                const value = output.value;
+                let result = {};
+                result[address] = value;
+                return result;
+            });
+
+        return {
+            isRBF: false,
+            txid: tx.txid(),
+            valueOut: Utils.satoshiToBTC(valueOutSat),
+            vout: vouts
+        };
+
+    }
+
+
+    static mapSocketIOBlockEvent(block) {
+        return block.rhash();
+    }
 }
 
 

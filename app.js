@@ -1,3 +1,4 @@
+const http = require('http');
 const Koa = require('koa');
 const app = new Koa();
 const bodyParser = require('koa-bodyparser');
@@ -5,11 +6,16 @@ const bcoin = require('bcoin');
 const config = require('./config.json');
 const version = require('./package').version;
 const Router = require('koa-router');
+const socket = require('socket.io');
+app.server = http.createServer(app.callback());
+const io = socket(app.server);
+const Utils = require('./app/util/utils');
 
 //controllers
 const AddressController = require('./app/controllers/AddressController');
 const BlockController = require('./app/controllers/BlockController');
 const TransactionController = require('./app/controllers/TransactionController');
+const SocketIOController = require('./app/controllers/SocketIOController');
 
 const PORT = 3000;
 
@@ -50,6 +56,8 @@ async function startApp() {
         const addressController = new AddressController(node);
         const blockController = new BlockController(node);
         const transactionController = new TransactionController(node);
+        const socketIOController = new SocketIOController(node, io);
+
 
         //Body parser
         app.use(bodyParser());
@@ -84,7 +92,8 @@ async function startApp() {
             .use(router.allowedMethods());
 
 
-        _app = app.listen(PORT);
+        _app = app.server.listen(PORT);
+        //_app = app.listen(PORT);
 
         _app.stopBcoin = async () => {
             node.stopSync();
@@ -94,12 +103,12 @@ async function startApp() {
 
     console.log('Initializing components');
     const node = await setupBcoinNode();
-    await setupKoa(node)
+    await setupKoa(node);
 }
 
 async function stopApp() {
     if (!_app) {
-        throw new Error("App is not initialized")
+        throw new Error('App is not initialized');
     }
     await _app.close();
     await _app.stopBcoin();
@@ -112,7 +121,7 @@ if (process.env.NODE_ENV !== 'test') {
         })
         .catch((e) => {
             console.log('er', e);
-            process.exit(1)
+            process.exit(1);
         });
 }
 
