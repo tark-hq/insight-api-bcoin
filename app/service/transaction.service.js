@@ -24,6 +24,7 @@ class TransactionService {
         this.getTransaction = this.getTransaction.bind(this);
         this.getRawTransaction = this.getRawTransaction.bind(this);
         this.getMetaTransaction = this.getMetaTransaction.bind(this);
+        this.getMetasByAddress = this.getMetasByAddress.bind(this);
         this.getSpentOutputs = this.getSpentOutputs.bind(this);
     }
 
@@ -32,7 +33,7 @@ class TransactionService {
      * Returns {MTX} meta transaction object with some meta fields and transaction object. See {@link {MTX}}
      *
      * @param hash {string} transaction hash, big-endian order
-     * @return {Promise<*>}
+     * @return {Promise<MTX> || null}
      */
     async getMetaTransaction(hash) {
         const hashBuffer = Utils.strToBuffer(hash);
@@ -45,6 +46,30 @@ class TransactionService {
         }
 
         return meta;
+    }
+
+    /**
+     * Returns {MTX} meta transaction object with some meta fields and transaction object. See {@link {MTX}}
+     *
+     * @param addr {string} address
+     * @return {Promise<MTX[]> || null}
+     */
+    async getMetasByAddress(addr) {
+        const hashBuffer = Utils.strToBuffer(addr);
+        const address = Utils.addrStrToAddress(addr);
+        let metas = await this.node.getMetaByAddress(address);
+
+        if (metas) {
+            metas = await Promise.all(metas.map(async mtx => {
+                const view = await this.node.getMetaView(mtx);
+                mtx.tx.inputs = mtx.tx.inputs.map(this._inputValuesMapper.bind(null, view));
+                mtx.confirmations = this.node.chain.height + 1 - mtx.height;
+                return mtx;
+            }))
+
+        }
+
+        return metas;
     }
 
     /**

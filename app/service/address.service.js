@@ -7,29 +7,8 @@ class AddressService {
 
         this.node = node;
 
-        this.getTransactionsByAddress = this.getTransactionsByAddress.bind(this);
         this.getMetasByAddress = this.getMetasByAddress.bind(this);
         this.getCoinsByAddress = this.getCoinsByAddress.bind(this);
-    }
-
-
-    //todo wtf is here, should be in transactionService instead?
-    /**
-     * Retrieves all transactions pertaining to given address
-     *
-     * @param address {string}
-     * @param includeInputValues {boolean} indicates whether to include input values as well
-     *
-     * @return {TX[]}
-     */
-    async getTransactionsByAddress(address, includeInputValues) {
-        let txs = await this.node.getTXByAddress(address);
-
-        if (includeInputValues) {
-            return await this._populateInputValues.call(this, txs);
-        }
-
-        return txs;
     }
 
 
