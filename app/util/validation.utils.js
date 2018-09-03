@@ -1,4 +1,5 @@
 const bcoin = require('bcoin');
+const config = require('../../config');
 
 class ValidationUtils {
 
@@ -16,26 +17,18 @@ class ValidationUtils {
 
     static validateAddress(address) {
         let validType = typeof address === 'string';
-        let isBase58 = false,
-            isBech32 = false;
 
-        try {
-            bcoin.Address.fromBase58(address);
-            isBase58 = true;
-        } catch (e) {
-            isBase58 = false;
+        if (!validType) {
+            return false;
         }
 
         try {
-            bcoin.Address.fromBech32(address);
-            isBech32 = true;
+            bcoin.Address.fromString(address, config.network);
+            return true;
         } catch (e) {
-            isBech32 = false;
+            return false;
         }
-
-        return validType && (isBase58 || isBech32);
     }
-
 }
 
 module.exports = ValidationUtils;
