@@ -10,7 +10,7 @@ class MappingService {
      * @param blockHash {string}
      */
     static mapGetBlockHash(blockHash) {
-        return {blockHash: Utils.reverseHex(blockHash)}
+        return {blockHash: Utils.reverseHex(blockHash)};
     }
 
     /**
@@ -58,7 +58,7 @@ class MappingService {
             reward: reward,
             isMainChain: isMainChain,
             poolInfo: {}
-        }
+        };
     }
 
     /**
@@ -69,11 +69,11 @@ class MappingService {
     static mapGetRawBlock(rawBlock) {
         return {
             rawblock: rawBlock
-        }
+        };
     }
 
     static mapGetRawTx(rawTx) {
-        return {rawtx: rawTx}
+        return {rawtx: rawTx};
     }
 
     /**
@@ -188,13 +188,13 @@ class MappingService {
 
     /**
      *
-     * @param addrStr
-     * @param mtxs
-     * @param txs {TX[]}
+     * @param addrStr {string}
+     * @param mtxs {MTX[]}
      * @param bestHeight
      * @param options
      */
-    static mapGetAddress(addrStr, mtxs, txs, bestHeight, options) {
+    static mapGetAddress(addrStr, mtxs, bestHeight, options) {
+        const txs = mtxs.map(mtx => mtx.tx);
 
         if (options.from) {
             mtxs = mtxs.filter(mtx => mtx.height >= options.from);
@@ -203,10 +203,6 @@ class MappingService {
         if (options.to) {
             mtxs = mtxs.filter(mtx => mtx.height <= options.to);
         }
-
-        const mtxsId = mtxs.map(mtx => mtx.tx.txid());
-
-        txs = txs.filter(tx => mtxsId.indexOf(tx.txid()) !== -1);
 
         function inputFilter(input) {
             return input && input.getAddress() && input.getAddress().toString(config.network) === addrStr;
@@ -286,7 +282,7 @@ class MappingService {
                 satoshis: coin.value,
                 height: coin.height,
                 confirmations: bestHeight - coin.height + 1
-            }
+            };
         });
     }
 }
