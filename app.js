@@ -15,6 +15,7 @@ const Utils = require('./app/util/utils');
 const AddressController = require('./app/controllers/AddressController');
 const BlockController = require('./app/controllers/BlockController');
 const TransactionController = require('./app/controllers/TransactionController');
+const StatusController = require('./app/controllers/StatusController');
 const SocketIOController = require('./app/controllers/SocketIOController');
 
 const PORT = 3000;
@@ -56,6 +57,7 @@ async function startApp() {
         const addressController = new AddressController(node);
         const blockController = new BlockController(node);
         const transactionController = new TransactionController(node);
+        const statusController = new StatusController(node);
         const socketIOController = new SocketIOController(node, io);
 
 
@@ -85,7 +87,15 @@ async function startApp() {
             .get('/addr/:address/unconfirmedBalance', addressController.getAddressUnconfirmedBalance)
             .get('/addr/:address/utxo', addressController.getAddressUnspentOutputs)
             .get('/addrs/:addresses/utxo', addressController.getAddressesUnspentOutputs)
-            .post('/addrs/utxo', addressController.getAddressesUnspentOutputs);
+            .post('/addrs/utxo', addressController.getAddressesUnspentOutputs)
+
+            //Status
+            .get('/sync', statusController.getSyncStatus)
+            .get('/peer', statusController.getPeerInfo)
+            .get('/status', statusController.getStatus);
+
+
+
 
         app
 
