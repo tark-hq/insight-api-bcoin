@@ -29,7 +29,7 @@ class TransactionController {
         this.getRawTransaction = this.getRawTransaction.bind(this);
         this.getTransactionsByBlockHashOrAddress = this.getTransactionsByBlockHashOrAddress.bind(this);
         this.getTransactionsByBlockHash = this.getTransactionsByBlockHash.bind(this);
-        //this.getTransactionsByAddress = this.getTransactionsByAddress.bind(this);
+        this.broadcastTransaction = this.broadcastTransaction.bind(this);
     }
 
     async getTransaction(ctx, next) {
@@ -136,6 +136,29 @@ class TransactionController {
         }
     }
 
+
+    async broadcastTransaction(ctx, next) {
+        const txHex = ctx.request.body.rawtx;
+        const isValid = ValidationUtils.validateRawTx(txHex);
+
+        if (isValid) {
+            try {
+                await this.transactionService.broadcastTransaction(txHex);
+                ctx.status = 200;
+                ctx.body = {}
+            } catch (e) {
+                ctx.status = 400;
+                ctx.body = new ErrorMessage(e.message || 'Unexpected error');
+            }
+        } else {
+            ctx.status = 400;
+            ctx.body = new ErrorMessage('TX hex is not valid');
+
+            if (!txHex) {
+                ctx.body = new ErrorMessage('TX hex is not specified');
+            }
+        }
+    }
 }
 
 module.exports = TransactionController;

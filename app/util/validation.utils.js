@@ -1,4 +1,5 @@
 const bcoin = require('bcoin');
+const TX = bcoin.TX;
 const config = require('../../config');
 
 class ValidationUtils {
@@ -13,6 +14,25 @@ class ValidationUtils {
 
     static validateTxid(txid) {
         return typeof txid === 'string' && new RegExp(/^[a-fA-F0-9]{64}$/).test(txid);
+    }
+
+    static validateHex(hexString) {
+        return typeof hexString === 'string' && new RegExp(/^[A-Fa-f0-9]{1,}$/).test(hexString);
+    }
+
+    static validateRawTx(txHex) {
+        const validBody = this.validateHex(txHex);
+
+        if (!validBody) {
+            return false;
+        }
+
+        try {
+            return !!TX.fromRaw(txHex, 'hex');
+        }
+        catch (e) {
+            return false;
+        }
     }
 
     static validateAddress(address) {

@@ -75,6 +75,7 @@ async function startApp() {
             .get('/tx/:txid', transactionController.getTransaction)
             .get('/rawtx/:txid', transactionController.getRawTransaction)
             .get('/txs/', transactionController.getTransactionsByBlockHashOrAddress)
+            .post('/tx/send', transactionController.broadcastTransaction)
 
             //Address
             .get('/addr/:address', addressController.getAddressInfo)

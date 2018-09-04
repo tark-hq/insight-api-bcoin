@@ -143,6 +143,18 @@ class TransactionService {
         }));
     }
 
+    /**
+     *
+     * @param txHex {string}
+     * @return {Promise<void>}
+     */
+    async broadcastTransaction(txHex) {
+        const tx = TX.fromRaw(txHex, 'hex');
+
+        await this.node.sendTX(tx);
+
+    }
+
 
     /**
      * Private method, maps coin value to the input
