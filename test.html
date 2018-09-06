@@ -1,0 +1,19 @@
+<script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+<script>
+    const room = 'inv';
+
+    const socket = io("http://127.0.0.1/socket.io");
+
+    socket.on('connect', function() {
+        // Join the room.
+        socket.emit('subscribe', room);
+    });
+
+    socket.on('tx', function(data) {
+        console.log("New transaction received: " + data.txid)
+    })
+    socket.on('block', function(block) {
+        console.log("New block received: " + block);
+    })
+
+</script>

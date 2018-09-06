@@ -13,7 +13,10 @@ class SocketIOController {
         this.handleSocket = this.handleSocket.bind(this);
         this.unsubscribe = this.unsubscribe.bind(this);
 
+        const nsp = io.of('/socket.io');
+
         this.io.on('connection', this.handleSocket);
+        nsp.on('connection', this.handleSocket);
     }
 
     async handleSocket(socket) {
