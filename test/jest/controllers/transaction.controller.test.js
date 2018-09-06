@@ -218,8 +218,3 @@ describe('Get transactions by blockHash or address test [/txs/?[block\\address=.
     });
 
 });
-
-
-function ignoring(obj, fieldNames) {
-    return omitDeep(obj, fieldNames);
-}
