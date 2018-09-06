@@ -113,7 +113,7 @@ class AddressController {
         let addressesStr = ctx.params.addresses;
 
         if (ctx.req.method === 'POST') {
-            addressesStr = ctx.body.addrs;
+            addressesStr = ctx.request.body['addrs'];
         }
 
         if (!addressesStr) {
@@ -123,7 +123,7 @@ class AddressController {
         }
 
         if (addressesStr.indexOf(',') !== -1) {
-            const addrs = addressesStr.split(',');
+            const addrs = addressesStr.split(',').filter(addr => addr.length > 0);
             const isValid = addrs.every(address => ValidationUtils.validateAddress(address));
             if (isValid) {
                 const addresses = addrs.map(addr => Utils.addrStrToAddress(addr));
