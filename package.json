@@ -27,7 +27,7 @@
   "bitcoreNode": "lib",
   "dependencies": {
     "assert": "^1.4.1",
-    "bcoin": "tuxcanfly/bcoin#index-outpoint",
+    "bcoin": "tark-hq/bcoin#index-blocktimestamp",
     "koa": "^2.5.2",
     "koa-bodyparser": "^4.2.1",
     "koa-router": "^7.4.0",
