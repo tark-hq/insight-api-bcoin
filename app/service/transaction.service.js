@@ -81,6 +81,8 @@ class TransactionService {
     async getTransaction(hash) {
         const hashBuffer = Utils.strToBuffer(hash);
 
+
+
         const meta = await this.node.getMeta(hashBuffer);
 
         if (!meta) {

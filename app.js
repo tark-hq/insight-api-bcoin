@@ -30,6 +30,7 @@ async function startApp() {
         config['index-tx'] = true;
         config['index-address'] = true;
         config['index-outpoint'] = true;
+        config['index-blocktimestamp'] = true;
 
         const node = new bcoin.FullNode(config);
 
@@ -72,6 +73,7 @@ async function startApp() {
             .get('/block-index/:height', blockController.getBlockHash)
             .get('/block/:blockHash', blockController.getBlock)
             .get('/rawBlock/:blockHashOrHeight', blockController.getRawBlock)
+            .get('/blocks', blockController.getBlockSummaries)
 
             //Transactions
             .get('/tx/:txid', transactionController.getTransaction)

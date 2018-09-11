@@ -81,6 +81,13 @@ class Utils {
     }
 
 
+    static isToday(ms) {
+        const now = new Date(Date.now());
+        const startToday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+        return ms >= startToday;
+    }
+
+
 }
 
 module.exports = Utils;

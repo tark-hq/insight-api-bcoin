@@ -14,7 +14,7 @@ class BlockController {
      */
     constructor(node) {
         if (!node) {
-            throw new Error("Bcoin {Fullnode} expected as dependency")
+            throw new Error('Bcoin {Fullnode} expected as dependency');
         }
 
         this.blockService = new BlockService(node);
@@ -22,6 +22,7 @@ class BlockController {
         this.getBlockHash = this.getBlockHash.bind(this);
         this.getBlock = this.getBlock.bind(this);
         this.getRawBlock = this.getRawBlock.bind(this);
+        this.getBlockSummaries = this.getBlockSummaries.bind(this);
     }
 
 
@@ -34,7 +35,7 @@ class BlockController {
                 const blockHash = await this.blockService.getBlockHash(blockHeight);
                 if (!blockHash) {
                     ctx.status = 404;
-                    ctx.body = new ErrorMessage('Block not found')
+                    ctx.body = new ErrorMessage('Block not found');
                 } else {
                     ctx.status = 200;
                     ctx.body = MappingService.mapGetBlockHash(blockHash);
@@ -42,7 +43,7 @@ class BlockController {
             } catch (e) {
                 console.error(e);
                 ctx.status = 500;
-                ctx.body = new ErrorMessage('Could not get block hash, internal server error')
+                ctx.body = new ErrorMessage('Could not get block hash, internal server error');
             }
         } else {
             ctx.status = 400;
@@ -64,7 +65,7 @@ class BlockController {
 
                 if (!block || !entry) {
                     ctx.status = 404;
-                    ctx.body = new ErrorMessage('Block not found')
+                    ctx.body = new ErrorMessage('Block not found');
                 } else {
                     const bestBlockHeight = await this.blockService.getBestBlockHeight();
                     const isMainChain = await this.blockService.isMainChain(entry);
@@ -75,11 +76,11 @@ class BlockController {
             } catch (e) {
                 console.error(e);
                 ctx.status = 500;
-                ctx.body = new ErrorMessage('Could not get block, internal server error')
+                ctx.body = new ErrorMessage('Could not get block, internal server error');
             }
         } else {
             ctx.status = 400;
-            ctx.body = new ErrorMessage('Block hash is not valid')
+            ctx.body = new ErrorMessage('Block hash is not valid');
         }
     }
 
@@ -120,8 +121,46 @@ class BlockController {
         } catch (e) {
             console.error(e);
             ctx.status = 500;
-            ctx.body = new ErrorMessage('Could not get raw block, internal server error')
+            ctx.body = new ErrorMessage('Could not get raw block, internal server error');
         }
+    }
+
+
+    async getBlockSummaries(ctx, next) {
+        const limit = Number(ctx.request.query.limit);
+        const blockDate = ctx.request.query.blockDate;
+
+        const now = new Date();
+
+        let from;
+        let to;
+
+        if (!blockDate) {
+            const blockDateUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+            from = Math.floor(blockDateUTC / 1000);
+            to = from + 86400;
+        } else {
+            const isValid = ValidationUtils.validateDateString(blockDate);
+
+            if (!isValid) {
+                ctx.status = 400;
+                ctx.body = new ErrorMessage('Date is not valid');
+                return;
+            }
+
+            const splitted = blockDate.split('-');
+
+            const blockDateUTC = Date.UTC(splitted[0], splitted[1] - 1, splitted[2]);
+            from = Math.floor(blockDateUTC / 1000);
+            to = from + 86400;
+        }
+
+
+        let blocks = await this.blockService.getBlocksByTimestamp(from, to);
+
+        ctx.status = 200;
+        ctx.body = MappingService.mapGetBlockSummaries(blocks, from, to, limit);
+
     }
 }
 

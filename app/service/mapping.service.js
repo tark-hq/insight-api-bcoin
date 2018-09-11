@@ -312,6 +312,61 @@ class MappingService {
     static mapSocketIOBlockEvent(block) {
         return block.rhash();
     }
+
+    static mapGetBlockSummaries(blocks, from, to, limit) {
+        const nextDate = new Date(to * 1000);
+        const currDate = new Date((to - 1) * 1000);
+        const prevDate = new Date((from - 86400) * 1000);
+
+
+        function toDateStr(date) {
+            const year = date.getUTCFullYear();
+            const month = `${date.getUTCMonth() + 1}`.padStart(2, 0);
+            const day = `${date.getUTCDate()}`.padStart(2, 0);
+            return [year, month, day].join('-');
+        }
+
+
+        const more = limit ? limit < blocks.length : false;
+
+        const pagination = {
+            next: toDateStr(nextDate),
+            prev: toDateStr(prevDate),
+            currentTs: to - 1,
+            current: toDateStr(currDate),
+            isToday: Utils.isToday(from * 1000)
+        };
+
+        pagination.more = more;
+        if (more) {
+            pagination.moreTs = to;
+        }
+
+        function blockMapper(block) {
+            return {
+                height: block.height,
+                size: block.getSize(),
+                hash: block.rhash(),
+                time: block.time,
+                txlength: block.txs.length,
+                poolInfo: {}
+            };
+        }
+
+
+        blocks = blocks
+            .map(blockMapper)
+            .sort((a, b) => b.height - a.height)
+            .filter((block, index) => !limit || index < (limit));
+
+
+        return {
+            blocks: blocks,
+            length: blocks.length,
+            pagination: pagination,
+        };
+
+    }
 }
 
 

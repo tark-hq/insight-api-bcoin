@@ -49,6 +49,11 @@ class ValidationUtils {
             return false;
         }
     }
+
+    static validateDateString(dateStr) {
+        return typeof dateStr === 'string' && new RegExp(/^(\d{4,4})\-(\d{2,2})\-(\d{2,2})$/).test(dateStr)
+    }
+
 }
 
 module.exports = ValidationUtils;

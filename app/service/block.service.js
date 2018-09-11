@@ -1,4 +1,4 @@
-const Utils = require('../util/utils')
+const Utils = require('../util/utils');
 
 class BlockService {
 
@@ -81,6 +81,18 @@ class BlockService {
      */
     async isMainChain(entry) {
         return await this.node.chain.isMainChain(entry)
+    }
+
+    async getBlocksByTimestamp(startTimestamp, endTimestamp) {
+
+        const blocks = await this.node.getBlocksByTimestamp(startTimestamp, endTimestamp);
+
+        //populate height
+        return await Promise.all(blocks.map(async block => {
+            const entry = await this.node.chain.getEntry(block.hash());
+            block.height = entry.height;
+            return block;
+        }));
     }
 
 }
