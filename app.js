@@ -7,6 +7,7 @@ const config = require('./config.json');
 const version = require('./package').version;
 const Router = require('koa-router');
 const socket = require('socket.io');
+const send = require('koa-send');
 app.server = http.createServer(app.callback());
 const io = socket(app.server);
 const Utils = require('./app/util/utils');
@@ -97,6 +98,9 @@ async function startApp() {
             .get('/status', statusController.getStatus);
 
 
+            .get('/socket.io/socket.io.js', async function (ctx, next) {
+                await send('./node_modules/socket.io-client.js')
+            });
 
 
         app
