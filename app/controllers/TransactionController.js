@@ -29,6 +29,7 @@ class TransactionController {
         this.getRawTransaction = this.getRawTransaction.bind(this);
         this.getTransactionsByBlockHashOrAddress = this.getTransactionsByBlockHashOrAddress.bind(this);
         this.getTransactionsByBlockHash = this.getTransactionsByBlockHash.bind(this);
+        this.getTransactionsByAddress = this.getTransactionsByAddress.bind(this);
         this.broadcastTransaction = this.broadcastTransaction.bind(this);
     }
 
@@ -89,17 +90,6 @@ class TransactionController {
     }
 
 
-    async getTransactionsByBlockHashOrAddress(ctx, next) {
-        if (ctx.query.block) {
-            await this.getTransactionsByBlockHash(ctx, next);
-        } else if (ctx.query.address) {
-            await this.getTransactionsByAddress(ctx, next);
-        } else {
-            return next();
-        }
-    }
-
-
     async getTransactionsByBlockHash(ctx, next) {
         const blockHash = ctx.query.block;
         const pageNum = ctx.query.pageNum || 0;
@@ -136,6 +126,52 @@ class TransactionController {
         }
     }
 
+    async getTransactionsByAddress(ctx, next) {
+        const pageNum = ctx.query.pageNum || 0;
+        const address = ctx.query.address;
+        const isValid = ValidationUtils.validateAddress(address);
+
+        if (!isValid) {
+            ctx.status = 400;
+            ctx.body = new ErrorMessage('Address is not valid');
+            return;
+        }
+
+        const mtxs = await this.transactionService.getMetasByAddress(address);
+
+        if (mtxs && mtxs.length > 0) {
+            const pagesTotal = Math.ceil(mtxs.length / 10);
+            const mtxsPaged = mtxs.slice(pageNum * 10, pageNum * 10 + 10);
+
+            const result = {
+                pagesTotal: pagesTotal
+            };
+
+            result.txs = await Promise.all(
+                mtxsPaged
+                    .map(async mtx => {
+                        const spentOutputs = await this.transactionService.getSpentOutputs(mtx.tx);
+                        return MappingService.mapGetTx(mtx, spentOutputs);
+                    }));
+
+            ctx.body = result;
+            ctx.status = 200;
+
+        } else {
+            ctx.status = 404;
+            ctx.body = new ErrorMessage('Transactions not found');
+        }
+    }
+
+    async getTransactionsByBlockHashOrAddress(ctx, next) {
+        if (ctx.query.block) {
+            await this.getTransactionsByBlockHash(ctx, next);
+        } else if (ctx.query.address) {
+            await this.getTransactionsByAddress(ctx, next);
+        } else {
+            return next();
+        }
+    }
 
     async broadcastTransaction(ctx, next) {
         const txHex = ctx.request.body.rawtx;
@@ -145,7 +181,7 @@ class TransactionController {
             try {
                 await this.transactionService.broadcastTransaction(txHex);
                 ctx.status = 200;
-                ctx.body = {}
+                ctx.body = {};
             } catch (e) {
                 ctx.status = 400;
                 ctx.body = new ErrorMessage(e.message || 'Unexpected error');
