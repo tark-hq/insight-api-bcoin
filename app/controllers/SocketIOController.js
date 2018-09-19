@@ -20,8 +20,6 @@ class SocketIOController {
     }
 
     async handleSocket(socket) {
-
-        console.log('Client connected');
         socket.subscriptions = {};
 
         const txListener = (tx) => {
@@ -35,13 +33,17 @@ class SocketIOController {
         //join room
         socket.on('subscribe', (room) => {
             if (room === 'inv') {
-                console.log('client subscribed to tx and block events');
 
-                socket['tx'] = txListener;
-                socket['block'] = blockListener;
+                if (!socket.subscriptions['tx']) {
+                    this.node.on('tx', txListener);
+                    socket.subscriptions['tx'] = txListener;
+                }
 
-                this.node.on('tx', txListener);
-                this.node.on('block', blockListener);
+                if (!socket.subscriptions['block']) {
+                    this.node.on('block', blockListener);
+                    socket.subscriptions['block'] = blockListener;
+                }
+
             }
         });
 
@@ -54,7 +56,6 @@ class SocketIOController {
         //disconnect from socket
         socket.on('disconnect', () => {
             this.unsubscribe(socket);
-            console.log('Client disconnected');
         });
     }
 
