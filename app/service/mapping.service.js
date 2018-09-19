@@ -54,7 +54,7 @@ class MappingService {
             chainwork: chainWork,
             confirmations: confirmations,
             previousblockhash: prevBlock,
-            nextblockhash: Utils.reverseHex(nextHash),
+            nextblockhash: nextHash ? Utils.reverseHex(nextHash): null,
             reward: reward,
             isMainChain: isMainChain,
             poolInfo: {}
@@ -234,7 +234,7 @@ class MappingService {
         const totalSent = Utils.satoshiToBTC(totalSentSat);
 
 
-        const unconfirmedTxs = mtxs.filter(mtx => mtx.height === bestHeight);
+        const unconfirmedTxs = mtxs.filter(mtx => mtx.height === bestHeight).map(mtx => mtx.tx);
 
         const totalUnconfirmedSentSat = unconfirmedTxs.reduce(totalSentReducer, 0);
         const totalUnconfirmedReceivedSat = unconfirmedTxs.reduce(totalReceivedReducer, 0);
